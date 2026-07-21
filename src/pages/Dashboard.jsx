@@ -4,6 +4,7 @@ import { useStores } from '../context/StoreContext'
 import { Download } from 'lucide-react'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import { notoSansBase64 } from '../assets/notoSansFont'
 
 const OLIVE_RGB = [61, 74, 40] // #3d4a28
 
@@ -79,6 +80,10 @@ export default function Dashboard() {
 
   function exportPDF() {
     const doc = new jsPDF()
+    doc.addFileToVFS('NotoSans.ttf', notoSansBase64)
+    doc.addFont('NotoSans.ttf', 'NotoSans', 'normal')
+    doc.setFont('NotoSans', 'normal')
+
     const today = new Date().toLocaleDateString('el-GR')
 
     doc.setFillColor(...OLIVE_RGB)
@@ -110,8 +115,8 @@ export default function Dashboard() {
         ['Εκκρεμείς Παραγγελίες', String(stats.pendingOrders)],
       ],
       theme: 'striped',
-      headStyles: { fillColor: OLIVE_RGB },
-      styles: { font: 'helvetica' },
+      headStyles: { fillColor: OLIVE_RGB, font: 'NotoSans' },
+      styles: { font: 'NotoSans' },
     })
     y = doc.lastAutoTable.finalY + 10
 
@@ -123,13 +128,14 @@ export default function Dashboard() {
         head: [['Πιάτο', 'Κόστος', 'Τιμή', 'Food Cost %']],
         body: topCost.map((r) => [r.name, `${r.cost.toFixed(2)} €`, `${Number(r.selling_price).toFixed(2)} €`, `${r.costPct.toFixed(1)}%`]),
         theme: 'striped',
-        headStyles: { fillColor: OLIVE_RGB },
+        headStyles: { fillColor: OLIVE_RGB, font: 'NotoSans' },
+        styles: { font: 'NotoSans' },
       })
       y = doc.lastAutoTable.finalY + 10
     }
 
     if (storeSummary.length > 0) {
-      if (y > 240) { doc.addPage(); y = 20 }
+      if (y > 240) { doc.addPage(); y = 20; doc.setFont('NotoSans', 'normal') }
       doc.text('Σύνοψη ανά Κατάστημα', 14, y)
       y += 4
       autoTable(doc, {
@@ -137,13 +143,14 @@ export default function Dashboard() {
         head: [['Κατάστημα', 'Αξία Αποθέματος', 'Χαμηλό Απόθεμα', 'Εκκρεμείς Παραγγελίες']],
         body: storeSummary.map((s) => [s.name, `${s.value.toFixed(2)} €`, String(s.lowStock), String(s.pending)]),
         theme: 'striped',
-        headStyles: { fillColor: OLIVE_RGB },
+        headStyles: { fillColor: OLIVE_RGB, font: 'NotoSans' },
+        styles: { font: 'NotoSans' },
       })
       y = doc.lastAutoTable.finalY + 10
     }
 
     if (lowStockList.length > 0) {
-      if (y > 240) { doc.addPage(); y = 20 }
+      if (y > 240) { doc.addPage(); y = 20; doc.setFont('NotoSans', 'normal') }
       doc.text('Χαμηλό Απόθεμα — Λεπτομέρειες', 14, y)
       y += 4
       autoTable(doc, {
@@ -151,7 +158,8 @@ export default function Dashboard() {
         head: [['Πρώτη Ύλη', 'Κατάστημα', 'Ποσότητα', 'Όριο']],
         body: lowStockList.map((s) => [s.ingredients?.name, s.stores?.name, `${s.quantity} ${s.ingredients?.unit}`, String(s.ingredients?.min_stock_alert)]),
         theme: 'striped',
-        headStyles: { fillColor: OLIVE_RGB },
+        headStyles: { fillColor: OLIVE_RGB, font: 'NotoSans' },
+        styles: { font: 'NotoSans' },
       })
     }
 
