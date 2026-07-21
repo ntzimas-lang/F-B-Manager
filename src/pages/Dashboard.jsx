@@ -82,6 +82,7 @@ export default function Dashboard() {
     const doc = new jsPDF()
     doc.addFileToVFS('NotoSans.ttf', notoSansBase64)
     doc.addFont('NotoSans.ttf', 'NotoSans', 'normal')
+    doc.addFont('NotoSans.ttf', 'NotoSans', 'bold')
     doc.setFont('NotoSans', 'normal')
 
     const today = new Date().toLocaleDateString('el-GR')
