@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { LayoutDashboard, ChefHat, Calculator, Boxes, Truck, Store, ClipboardCheck, Users } from 'lucide-react'
+import { LayoutDashboard, ChefHat, Calculator, Boxes, Truck, Store, ClipboardCheck, Users, Wheat } from 'lucide-react'
 import { useStores } from '../context/StoreContext'
 
 export default function Layout() {
@@ -17,6 +17,9 @@ export default function Layout() {
         </NavLink>
         <NavLink to="/recipes" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
           <ChefHat size={18} /> Μενού & Συνταγές
+        </NavLink>
+        <NavLink to="/ingredients" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
+          <Wheat size={18} /> Πρώτες Ύλες
         </NavLink>
         <NavLink to="/costing" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
           <Calculator size={18} /> Food Costing
