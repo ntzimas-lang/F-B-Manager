@@ -20,7 +20,7 @@ body {
   margin: 0;
   background: var(--olive-50);
   color: var(--ink);
-  direction: rtl;
+  direction: ltr;
 }
 
 .app-shell {
@@ -116,7 +116,7 @@ table {
   font-size: 14px;
 }
 th {
-  text-align: right;
+  text-align: left;
   background: var(--olive-100);
   color: var(--olive-900);
   padding: 10px 12px;
@@ -160,7 +160,7 @@ input, select {
   border: 1px solid #d8dcc9;
   border-radius: 6px;
   font-size: 14px;
-  direction: rtl;
+  direction: ltr;
 }
 
 .modal-overlay {
