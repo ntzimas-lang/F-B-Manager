@@ -4,6 +4,7 @@ import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import Stores from './pages/Stores'
 import Recipes from './pages/Recipes'
+import Ingredients from './pages/Ingredients'
 import Costing from './pages/Costing'
 import Inventory from './pages/Inventory'
 import Stocktake from './pages/Stocktake'
@@ -19,6 +20,7 @@ export default function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/stores" element={<Stores />} />
             <Route path="/recipes" element={<Recipes />} />
+            <Route path="/ingredients" element={<Ingredients />} />
             <Route path="/costing" element={<Costing />} />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/stocktake" element={<Stocktake />} />
