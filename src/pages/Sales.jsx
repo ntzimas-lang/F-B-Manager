@@ -94,10 +94,10 @@ export default function Sales() {
         .maybeSingle()
 
       if (stockRow) {
-        const newQty = Number(stockRow.quantity) - delta
+        const newQty = Number(stockRow.quantity) + delta
         await supabase.from('inventory_stock').update({ quantity: newQty, updated_at: new Date().toISOString() }).eq('id', stockRow.id)
       } else if (direction === -1) {
-        await supabase.from('inventory_stock').insert({ store_id: activeStoreId, ingredient_id: link.ingredient_id, quantity: -delta })
+        await supabase.from('inventory_stock').insert({ store_id: activeStoreId, ingredient_id: link.ingredient_id, quantity: delta })
       }
 
       if (direction === -1) {
@@ -106,7 +106,7 @@ export default function Sales() {
           store_id: activeStoreId,
           ingredient_id: link.ingredient_id,
           movement_type: 'consumption',
-          quantity: -delta,
+          quantity: delta,
           note: `Πώληση: ${recipes.find(r => r.id === recipeId)?.name || ''} x${quantitySold}`,
         })
       }
