@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { logActivity } from '../lib/activity'
 import { useLanguage } from '../context/LanguageContext'
-import { Plus, Trash2, X } from 'lucide-react'
+import { Plus, Trash2, Pencil, X } from 'lucide-react'
 
 export default function Ingredients() {
   const { t } = useLanguage()
   const [ingredients, setIngredients] = useState([])
   const [suppliers, setSuppliers] = useState([])
   const [showForm, setShowForm] = useState(false)
+  const [editIngredient, setEditIngredient] = useState(null)
 
   async function loadAll() {
     const [i, s] = await Promise.all([
@@ -38,7 +39,7 @@ export default function Ingredients() {
       <div className="card">
         <div style={{display:'flex', justifyContent:'space-between', marginBottom:12}}>
           <h2 style={{margin:0}}>{t('ingredients')} ({ingredients.length})</h2>
-          <button className="btn" onClick={() => setShowForm(true)}><Plus size={16}/> {t('newIngredient')}</button>
+          <button className="btn" onClick={() => { setEditIngredient(null); setShowForm(true) }}><Plus size={16}/> {t('newIngredient')}</button>
         </div>
         <table>
           <thead><tr><th>{t('name')}</th><th>{t('unit')}</th><th>{t('price')}</th><th>{t('supplier')}</th><th></th></tr></thead>
@@ -49,7 +50,10 @@ export default function Ingredients() {
                 <td>{ing.unit}</td>
                 <td>{Number(ing.current_price).toFixed(3)} €</td>
                 <td>{suppliers.find(s => s.id === ing.supplier_id)?.name || '-'}</td>
-                <td><button className="icon-btn danger" onClick={() => deleteIngredient(ing.id)}><Trash2 size={16}/></button></td>
+                <td style={{display:'flex', gap:8}}>
+                  <button className="icon-btn" onClick={() => { setEditIngredient(ing); setShowForm(true) }}><Pencil size={16}/></button>
+                  <button className="icon-btn danger" onClick={() => deleteIngredient(ing.id)}><Trash2 size={16}/></button>
+                </td>
               </tr>
             ))}
             {ingredients.length === 0 && <tr><td colSpan={5}>{t('noIngredients')}</td></tr>}
@@ -58,30 +62,41 @@ export default function Ingredients() {
       </div>
 
       {showForm && (
-        <IngredientFormModal suppliers={suppliers} onClose={() => setShowForm(false)} onSaved={() => { setShowForm(false); loadAll() }} />
+        <IngredientFormModal suppliers={suppliers} ingredient={editIngredient} onClose={() => setShowForm(false)} onSaved={() => { setShowForm(false); loadAll() }} />
       )}
     </div>
   )
 }
 
-function IngredientFormModal({ suppliers, onClose, onSaved }) {
+function IngredientFormModal({ suppliers, ingredient, onClose, onSaved }) {
   const { t } = useLanguage()
-  const [form, setForm] = useState({ name:'', unit:'kg', current_price:'', supplier_id:'', min_stock_alert:'' })
+  const isEdit = !!ingredient
+  const [form, setForm] = useState({
+    name: ingredient?.name || '', unit: ingredient?.unit || 'kg',
+    current_price: ingredient?.current_price ?? '', supplier_id: ingredient?.supplier_id || '',
+    min_stock_alert: ingredient?.min_stock_alert ?? '',
+  })
   async function save() {
     if (!form.name) return
-    await supabase.from('ingredients').insert({
+    const payload = {
       ...form,
       current_price: Number(form.current_price) || 0,
       min_stock_alert: Number(form.min_stock_alert) || 0,
       supplier_id: form.supplier_id || null,
-    })
-    await logActivity('create', 'ingredient', form.name)
+    }
+    if (isEdit) {
+      await supabase.from('ingredients').update(payload).eq('id', ingredient.id)
+      await logActivity('update', 'ingredient', form.name)
+    } else {
+      await supabase.from('ingredients').insert(payload)
+      await logActivity('create', 'ingredient', form.name)
+    }
     onSaved()
   }
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
-        <div style={{display:'flex', justifyContent:'space-between'}}><h2>{t('newIngredient')}</h2><button className="icon-btn" onClick={onClose}><X/></button></div>
+        <div style={{display:'flex', justifyContent:'space-between'}}><h2>{isEdit ? `${t('edit')} — ${ingredient.name}` : t('newIngredient')}</h2><button className="icon-btn" onClick={onClose}><X/></button></div>
         <div className="form-row"><label>{t('name')}</label><input value={form.name} onChange={e => setForm({...form, name:e.target.value})}/></div>
         <div className="form-row"><label>{t('unit')}</label>
           <select value={form.unit} onChange={e => setForm({...form, unit:e.target.value})}>

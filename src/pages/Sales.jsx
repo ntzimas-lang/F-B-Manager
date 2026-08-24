@@ -121,7 +121,7 @@ export default function Sales() {
   return (
     <div>
       <div className="topbar" style={{ marginBottom: 16 }}>
-        <h1>{t('sales')} {store ? `— ${store.name}` : ''}</h1>
+        <h1>{t('sales')}</h1>
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
       </div>
 

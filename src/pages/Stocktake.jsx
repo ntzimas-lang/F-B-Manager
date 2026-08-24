@@ -88,7 +88,7 @@ export default function Stocktake() {
   return (
     <div>
       <div className="topbar" style={{marginBottom:16}}>
-        <h1>{t('stocktake')} {store ? `— ${store.name}` : ''}</h1>
+        <h1>{t('stocktake')}</h1>
         <input type="month" value={month} onChange={e => setMonth(e.target.value)} />
       </div>
 

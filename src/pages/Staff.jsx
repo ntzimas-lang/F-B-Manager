@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { logActivity } from '../lib/activity'
 import { useStores } from '../context/StoreContext'
 import { useLanguage } from '../context/LanguageContext'
-import { Plus, X, Trash2, Download } from 'lucide-react'
+import { Plus, X, Trash2, Download, Pencil } from 'lucide-react'
 
 function shiftHours(start, end) {
   const [sh, sm] = start.split(':').map(Number)
@@ -21,6 +21,7 @@ export default function Staff() {
   const [shifts, setShifts] = useState([])
   const [month, setMonth] = useState(new Date().toISOString().slice(0,7))
   const [showEmpForm, setShowEmpForm] = useState(false)
+  const [editEmployee, setEditEmployee] = useState(null)
   const [showShiftForm, setShowShiftForm] = useState(false)
 
   async function load() {
@@ -63,7 +64,7 @@ export default function Staff() {
         <div className="card">
           <div style={{display:'flex', justifyContent:'space-between', marginBottom:12}}>
             <h2 style={{margin:0}}>{t('employees')} ({employees.length})</h2>
-            <button className="btn" onClick={() => setShowEmpForm(true)}><Plus size={16}/> {t('newEmployee')}</button>
+            <button className="btn" onClick={() => { setEditEmployee(null); setShowEmpForm(true) }}><Plus size={16}/> {t('newEmployee')}</button>
           </div>
           <table>
             <thead><tr><th>{t('name')}</th><th>{t('role')}</th><th>{t('store')}</th><th>{t('hourlyRate')}</th><th></th></tr></thead>
@@ -72,7 +73,10 @@ export default function Staff() {
                 <tr key={e.id}>
                   <td>{e.name}</td><td>{e.role}</td><td>{e.stores?.name}</td>
                   <td>{Number(e.hourly_rate).toFixed(2)} €{t('perHour')}</td>
-                  <td><button className="icon-btn danger" onClick={() => deleteEmployee(e.id)}><Trash2 size={16}/></button></td>
+                  <td style={{display:'flex', gap:8}}>
+                    <button className="icon-btn" onClick={() => { setEditEmployee(e); setShowEmpForm(true) }}><Pencil size={16}/></button>
+                    <button className="icon-btn danger" onClick={() => deleteEmployee(e.id)}><Trash2 size={16}/></button>
+                  </td>
                 </tr>
               ))}
               {employees.length === 0 && <tr><td colSpan={5}>{t('noEmployees')}</td></tr>}
@@ -116,25 +120,35 @@ export default function Staff() {
 
       {subTab === 'payroll' && <Payroll employees={employees} shifts={shifts} month={month} setMonth={setMonth} />}
 
-      {showEmpForm && <EmployeeFormModal stores={stores} onClose={() => setShowEmpForm(false)} onSaved={() => { setShowEmpForm(false); load() }} />}
+      {showEmpForm && <EmployeeFormModal stores={stores} employee={editEmployee} onClose={() => setShowEmpForm(false)} onSaved={() => { setShowEmpForm(false); load() }} />}
       {showShiftForm && <ShiftFormModal stores={stores} selectedStoreId={selectedStoreId} onClose={() => setShowShiftForm(false)} onSaved={() => { setShowShiftForm(false); load() }} />}
     </div>
   )
 }
 
-function EmployeeFormModal({ stores, onClose, onSaved }) {
+function EmployeeFormModal({ stores, employee, onClose, onSaved }) {
   const { t } = useLanguage()
-  const [form, setForm] = useState({ name:'', role:'', store_id:'', hourly_rate:'' })
+  const isEdit = !!employee
+  const [form, setForm] = useState({
+    name: employee?.name || '', role: employee?.role || '',
+    store_id: employee?.store_id || '', hourly_rate: employee?.hourly_rate ?? '',
+  })
   async function save() {
     if (!form.name || !form.store_id) return
-    await supabase.from('employees').insert({ ...form, hourly_rate: Number(form.hourly_rate) || 0, active: true })
-    await logActivity('create', 'employee', form.name)
+    const payload = { ...form, hourly_rate: Number(form.hourly_rate) || 0 }
+    if (isEdit) {
+      await supabase.from('employees').update(payload).eq('id', employee.id)
+      await logActivity('update', 'employee', form.name)
+    } else {
+      await supabase.from('employees').insert({ ...payload, active: true })
+      await logActivity('create', 'employee', form.name)
+    }
     onSaved()
   }
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
-        <div style={{display:'flex', justifyContent:'space-between'}}><h2>{t('newEmployee')}</h2><button className="icon-btn" onClick={onClose}><X/></button></div>
+        <div style={{display:'flex', justifyContent:'space-between'}}><h2>{isEdit ? `${t('edit')} — ${employee.name}` : t('newEmployee')}</h2><button className="icon-btn" onClick={onClose}><X/></button></div>
         <div className="form-row"><label>{t('name')}</label><input value={form.name} onChange={e => setForm({...form, name:e.target.value})}/></div>
         <div className="form-row"><label>{t('role')}</label><input value={form.role} onChange={e => setForm({...form, role:e.target.value})}/></div>
         <div className="form-row"><label>{t('store')}</label>
