@@ -139,7 +139,7 @@ export default function Sales() {
       )}
 
       <div className="card">
-        <h2 style={{ marginTop: 0 }}>Μερίδες που πουλήθηκαν — {store ? `${store.name} — ` : ''}{date}</h2>
+        <h2 style={{ marginTop: 0 }}>Πωλήσεις</h2>
         {loading ? <p>Φόρτωση...</p> : (
           <>
             <table>
