@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { LayoutDashboard, ChefHat, Calculator, Boxes, Truck, Store, ClipboardCheck, Users, Wheat, History, LogOut, Receipt, UserCog, Globe } from 'lucide-react'
+import { LayoutDashboard, ChefHat, Calculator, Boxes, Truck, Store, ClipboardCheck, Users, Wheat, History, LogOut, Receipt, UserCog } from 'lucide-react'
 import { useStores } from '../context/StoreContext'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
@@ -7,7 +7,7 @@ import { useLanguage } from '../context/LanguageContext'
 export default function Layout() {
   const { stores, selectedStoreId, selectStore, loading } = useStores()
   const { profile, session, signOut } = useAuth()
-  const { lang, toggleLang, t } = useLanguage()
+  const { lang, chooseLang, t } = useLanguage()
 
   return (
     <div className="app-shell">
@@ -74,16 +74,22 @@ export default function Layout() {
         <div className="topbar">
           <div />
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <button
-              onClick={toggleLang}
-              title={lang === 'el' ? 'Switch to English' : 'Αλλαγή σε Ελληνικά'}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 6,
-                border: '1px solid #d8dcc9', background: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-              }}
-            >
-              <Globe size={15} /> {lang === 'el' ? 'ΕΛ' : 'EN'}
-            </button>
+            <div style={{ display: 'flex', border: '1px solid #d8dcc9', borderRadius: 6, overflow: 'hidden' }}>
+              <button
+                onClick={() => chooseLang('el')}
+                style={{
+                  padding: '7px 12px', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                  background: lang === 'el' ? 'var(--olive-700)' : '#fff', color: lang === 'el' ? '#fff' : 'var(--ink)',
+                }}
+              >Ελληνικά</button>
+              <button
+                onClick={() => chooseLang('en')}
+                style={{
+                  padding: '7px 12px', border: 'none', borderLeft: '1px solid #d8dcc9', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                  background: lang === 'en' ? 'var(--olive-700)' : '#fff', color: lang === 'en' ? '#fff' : 'var(--ink)',
+                }}
+              >English</button>
+            </div>
             {!loading && (
               <select
                 className="store-select"
