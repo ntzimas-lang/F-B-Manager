@@ -12,12 +12,17 @@ export function LanguageProvider({ children }) {
     localStorage.setItem('fb-manager-lang', next)
   }
 
+  function chooseLang(next) {
+    setLang(next)
+    localStorage.setItem('fb-manager-lang', next)
+  }
+
   function t(key) {
     return translations[lang]?.[key] || translations.el[key] || key
   }
 
   return (
-    <LanguageContext.Provider value={{ lang, toggleLang, t }}>
+    <LanguageContext.Provider value={{ lang, toggleLang, chooseLang, t }}>
       {children}
     </LanguageContext.Provider>
   )
