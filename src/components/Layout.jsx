@@ -19,14 +19,18 @@ export default function Layout() {
         <NavLink to="/stores" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
           <Store size={18} /> {t('stores')}
         </NavLink>
+
+        <div className="nav-group-label">{lang === 'el' ? 'Μενού' : 'Menu'}</div>
         <NavLink to="/recipes" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
           <ChefHat size={18} /> {t('recipes')}
         </NavLink>
-        <NavLink to="/ingredients" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
-          <Wheat size={18} /> {t('ingredients')}
-        </NavLink>
         <NavLink to="/costing" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
           <Calculator size={18} /> {t('costing')}
+        </NavLink>
+
+        <div className="nav-group-label">{lang === 'el' ? 'Λειτουργία' : 'Operations'}</div>
+        <NavLink to="/ingredients" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
+          <Wheat size={18} /> {t('ingredients')}
         </NavLink>
         <NavLink to="/inventory" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
           <Boxes size={18} /> {t('inventory')}
@@ -40,6 +44,7 @@ export default function Layout() {
         <NavLink to="/orders" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
           <Truck size={18} /> {t('orders')}
         </NavLink>
+
         <NavLink to="/staff" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
           <Users size={18} /> {t('staff')}
         </NavLink>
