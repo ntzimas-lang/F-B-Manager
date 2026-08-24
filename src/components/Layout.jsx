@@ -19,6 +19,9 @@ export default function Layout() {
         <NavLink to="/stores" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
           <Store size={18} /> {t('stores')}
         </NavLink>
+        <NavLink to="/staff" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
+          <Users size={18} /> {t('staff')}
+        </NavLink>
 
         <div className="nav-group-label">{lang === 'el' ? 'Μενού' : 'Menu'}</div>
         <NavLink to="/recipes" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
@@ -45,9 +48,7 @@ export default function Layout() {
           <Truck size={18} /> {t('orders')}
         </NavLink>
 
-        <NavLink to="/staff" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
-          <Users size={18} /> {t('staff')}
-        </NavLink>
+        <div className="nav-group-label">{lang === 'el' ? 'Διαχείριση' : 'Management'}</div>
         <NavLink to="/activity" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
           <History size={18} /> {t('activity')}
         </NavLink>
