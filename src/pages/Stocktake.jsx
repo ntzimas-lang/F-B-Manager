@@ -103,7 +103,7 @@ export default function Stocktake() {
       )}
 
       <div className="card">
-        <h2 style={{marginTop:0}}>Καταμέτρηση — {month}</h2>
+        <h2 style={{marginTop:0}}>Καταμέτρηση — {store ? `${store.name} — ` : ''}{month}</h2>
         {loading ? <p>Φόρτωση...</p> : (
           <>
             <table>
