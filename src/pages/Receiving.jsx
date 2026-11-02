@@ -5,6 +5,7 @@ import { logActivity } from '../lib/activity'
 import { useStores } from '../context/StoreContext'
 import { useLanguage } from '../context/LanguageContext'
 import { ScanLine, Plus, Trash2, X } from 'lucide-react'
+import { PRICE_ALERT_PCT } from '../lib/prices'
 
 export default function Receiving() {
   const { stores, selectedStoreId } = useStores()
@@ -19,11 +20,12 @@ export default function Receiving() {
   const [invoiceNumber, setInvoiceNumber] = useState('')
   const [supplierId, setSupplierId] = useState('')
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
-  const [lines, setLines] = useState([{ ingredient_id: '', quantity: '' }])
+  const [lines, setLines] = useState([{ ingredient_id: '', quantity: '', unit_price: '' }])
   const [scanning, setScanning] = useState(false)
   const [scanError, setScanError] = useState('')
   const [duplicate, setDuplicate] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [alerts, setAlerts] = useState([])
   const scannerRef = useRef(null)
 
   async function load() {
@@ -92,7 +94,42 @@ export default function Receiving() {
     }).select().single()
     if (error) { setSaving(false); alert(error.message); return }
 
-    await supabase.from('goods_receipt_items').insert(valid.map(l => ({ receipt_id: receipt.id, ingredient_id: l.ingredient_id, quantity: Number(l.quantity) })))
+    // προηγούμενες τιμές (πριν την καταχώρηση αυτής της παραλαβής)
+    const priceInfo = {}
+    for (const l of valid) {
+      const price = Number(l.unit_price)
+      if (!(price > 0)) continue
+      const { data: prevRows } = await supabase.from('goods_receipt_items')
+        .select('unit_price, goods_receipts!inner(receipt_date)')
+        .eq('ingredient_id', l.ingredient_id).not('unit_price', 'is', null)
+        .limit(1000)
+      const sorted = (prevRows || []).sort((a, b) => b.goods_receipts.receipt_date.localeCompare(a.goods_receipts.receipt_date))
+      const latest = sorted[0]
+      const ing = ingredients.find(x => x.id === l.ingredient_id)
+      priceInfo[l.ingredient_id] = {
+        prev: latest ? Number(latest.unit_price) : Number(ing?.current_price) || 0,
+        isLatest: !latest || date >= latest.goods_receipts.receipt_date,
+      }
+    }
+
+    await supabase.from('goods_receipt_items').insert(valid.map(l => ({
+      receipt_id: receipt.id, ingredient_id: l.ingredient_id, quantity: Number(l.quantity),
+      unit_price: Number(l.unit_price) > 0 ? Number(l.unit_price) : null,
+    })))
+
+    const newAlerts = []
+    for (const l of valid) {
+      const info = priceInfo[l.ingredient_id]
+      if (!info) continue
+      const price = Number(l.unit_price)
+      const ing = ingredients.find(x => x.id === l.ingredient_id)
+      if (info.isLatest) await supabase.from('ingredients').update({ current_price: price }).eq('id', l.ingredient_id)
+      if (info.prev > 0) {
+        const pct = ((price - info.prev) / info.prev) * 100
+        if (pct >= PRICE_ALERT_PCT) newAlerts.push({ name: ing?.name, prev: info.prev, price, pct })
+      }
+    }
+    setAlerts(newAlerts)
 
     for (const l of valid) {
       const qty = Number(l.quantity)
@@ -108,7 +145,7 @@ export default function Receiving() {
       })
     }
     await logActivity('create', 'receipt', store?.name, `${invoiceNumber || ref.slice(0, 40)}: ${valid.length}`)
-    setInvoiceRef(''); setInvoiceNumber(''); setSupplierId(''); setLines([{ ingredient_id: '', quantity: '' }])
+    setInvoiceRef(''); setInvoiceNumber(''); setSupplierId(''); setLines([{ ingredient_id: '', quantity: '', unit_price: '' }])
     setSaving(false)
     load()
   }
@@ -151,7 +188,7 @@ export default function Receiving() {
         <div className="form-row"><label>{t('date')}</label><input type="date" value={date} onChange={e => setDate(e.target.value)} /></div>
 
         <table>
-          <thead><tr><th>{t('ingredient')}</th><th>{t('quantity')}</th><th></th></tr></thead>
+          <thead><tr><th>{t('ingredient')}</th><th>{t('quantity')}</th><th>{t('unitPrice')} (€)</th><th></th></tr></thead>
           <tbody>
             {lines.map((l, i) => {
               const ing = ingredients.find(x => x.id === l.ingredient_id)
@@ -164,6 +201,15 @@ export default function Receiving() {
                     </select>
                   </td>
                   <td><input type="number" step="0.01" min="0" style={{ width: 100 }} value={l.quantity} onChange={e => setLine(i, { quantity: e.target.value })} /> {ing?.unit}</td>
+                  <td>
+                    <input type="number" step="0.001" min="0" style={{ width: 100 }} value={l.unit_price} onChange={e => setLine(i, { unit_price: e.target.value })} />
+                    {(() => {
+                      const cur = Number(ing?.current_price), np = Number(l.unit_price)
+                      if (!(cur > 0 && np > 0)) return null
+                      const pct = ((np - cur) / cur) * 100
+                      return Math.abs(pct) >= 1 ? <span style={{ marginLeft: 6, fontSize: 12, fontWeight: 600, color: pct >= PRICE_ALERT_PCT ? 'var(--danger)' : pct > 0 ? 'var(--warn)' : 'var(--ok)' }}>{pct > 0 ? '+' : ''}{pct.toFixed(0)}%</span> : null
+                    })()}
+                  </td>
                   <td><button className="icon-btn danger" onClick={() => setLines(lines.length > 1 ? lines.filter((_, idx) => idx !== i) : lines)}><Trash2 size={16} /></button></td>
                 </tr>
               )
@@ -171,10 +217,19 @@ export default function Receiving() {
           </tbody>
         </table>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16 }}>
-          <button className="btn btn-outline" onClick={() => setLines([...lines, { ingredient_id: '', quantity: '' }])}><Plus size={14} /> {t('addLine')}</button>
+          <button className="btn btn-outline" onClick={() => setLines([...lines, { ingredient_id: '', quantity: '', unit_price: '' }])}><Plus size={14} /> {t('addLine')}</button>
           <button className="btn" onClick={save} disabled={saving || duplicate || !invoiceRef.trim()}>{saving ? t('saving') : t('recordReceipt')}</button>
         </div>
       </div>
+
+      {alerts.length > 0 && (
+        <div className="card" style={{ marginTop: 16, borderColor: 'var(--danger)' }}>
+          <h2 style={{ marginTop: 0, color: 'var(--danger)' }}>{t('priceAlert')}</h2>
+          {alerts.map((a, i) => (
+            <div key={i}>{a.name}: {a.prev.toFixed(3)} € → <strong>{a.price.toFixed(3)} €</strong> (+{a.pct.toFixed(0)}%)</div>
+          ))}
+        </div>
+      )}
 
       {history.length > 0 && (
         <div className="card" style={{ marginTop: 20 }}>

@@ -22,6 +22,9 @@ export const translations = {
     importExcel: 'Εισαγωγή από Excel', importHelp: 'Αρχείο .xlsx ή .csv με στήλες: Όνομα, Μονάδα, Τιμή, Προμηθευτής, Όριο ειδοποίησης (η πρώτη γραμμή είναι επικεφαλίδες). Υπάρχουσες πρώτες ύλες δεν αλλάζουν.',
     downloadTemplate: 'Κατέβασε πρότυπο', importEmpty: 'Δεν βρέθηκαν γραμμές.', importReadError: 'Δεν διαβάστηκε το αρχείο.', importDone: 'Εισήχθησαν {n} πρώτες ύλες.',
     importOk: 'Νέα', importExists: 'Υπάρχει ήδη', importBadUnit: 'Άγνωστη μονάδα', importBtn: 'Εισαγωγή',
+    unitPrice: 'Τιμή μονάδας', priceAlert: 'Αύξηση τιμής', priceIncreases: 'Αυξήσεις τιμών (τελευταίες 30 ημέρες)', previousPrice: 'Προηγούμενη', newPrice: 'Νέα',
+    priceHistory: 'Ιστορικό τιμών', currentPrice: 'Τρέχουσα τιμή', noPriceData: 'Δεν υπάρχουν τιμές αγοράς για αυτόν τον μήνα. Γράφονται από τη σελίδα Παραλαβή.',
+    minPrice: 'Ελάχιστη', maxPrice: 'Μέγιστη', avgPrice: 'Μέση', weightedAvg: 'Μέση σταθμισμένη',
     // Login
     login: 'Σύνδεση', wrongCredentials: 'Λάθος email ή κωδικός.',
     // Dashboard
@@ -95,6 +98,9 @@ export const translations = {
     noUsers: 'Δεν υπάρχουν χρήστες ακόμα.',
   },
   en: {
+    unitPrice: 'Unit price', priceAlert: 'Price increase', priceIncreases: 'Price increases (last 30 days)', previousPrice: 'Previous', newPrice: 'New',
+    priceHistory: 'Price history', currentPrice: 'Current price', noPriceData: 'No purchase prices for this month. They are recorded from the Receiving page.',
+    minPrice: 'Min', maxPrice: 'Max', avgPrice: 'Average', weightedAvg: 'Weighted average',
     importExcel: 'Import from Excel', importHelp: '.xlsx or .csv file with columns: Name, Unit, Price, Supplier, Alert threshold (first row is headers). Existing ingredients are not changed.',
     downloadTemplate: 'Download template', importEmpty: 'No rows found.', importReadError: 'Could not read the file.', importDone: '{n} ingredients imported.',
     importOk: 'New', importExists: 'Already exists', importBadUnit: 'Unknown unit', importBtn: 'Import',

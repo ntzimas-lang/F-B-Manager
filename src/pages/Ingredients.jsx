@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { logActivity } from '../lib/activity'
 import { useLanguage } from '../context/LanguageContext'
-import { Plus, Trash2, Pencil, X, Upload } from 'lucide-react'
+import { Plus, Trash2, Pencil, X, Upload, LineChart } from 'lucide-react'
 import { readSheet } from 'read-excel-file/browser'
 
 export default function Ingredients() {
@@ -12,6 +12,7 @@ export default function Ingredients() {
   const [showForm, setShowForm] = useState(false)
   const [editIngredient, setEditIngredient] = useState(null)
   const [showImport, setShowImport] = useState(false)
+  const [historyIng, setHistoryIng] = useState(null)
 
   async function loadAll() {
     const [i, s] = await Promise.all([
@@ -56,6 +57,7 @@ export default function Ingredients() {
                 <td>{Number(ing.current_price).toFixed(3)} €</td>
                 <td>{suppliers.find(s => s.id === ing.supplier_id)?.name || '-'}</td>
                 <td style={{display:'flex', gap:8}}>
+                  <button className="icon-btn" title={t('priceHistory')} onClick={() => setHistoryIng(ing)}><LineChart size={16}/></button>
                   <button className="icon-btn" onClick={() => { setEditIngredient(ing); setShowForm(true) }}><Pencil size={16}/></button>
                   <button className="icon-btn danger" onClick={() => deleteIngredient(ing.id)}><Trash2 size={16}/></button>
                 </td>
@@ -65,6 +67,8 @@ export default function Ingredients() {
           </tbody>
         </table>
       </div>
+
+      {historyIng && <PriceHistoryModal ingredient={historyIng} suppliers={suppliers} onClose={() => setHistoryIng(null)} />}
 
       {showImport && (
         <ImportModal ingredients={ingredients} suppliers={suppliers} onClose={() => setShowImport(false)} onDone={() => { setShowImport(false); loadAll() }} />
@@ -243,6 +247,96 @@ function ImportModal({ ingredients, suppliers, onClose, onDone }) {
             </div>
             <div className="modal-actions">
               <button className="btn" disabled={busy || okCount === 0} onClick={doImport}>{busy ? t('saving') : `${t('importBtn')} (${okCount})`}</button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function PriceHistoryModal({ ingredient, suppliers, onClose }) {
+  const { t } = useLanguage()
+  const [month, setMonth] = useState(new Date().toISOString().slice(0, 7))
+  const [rows, setRows] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true)
+      const [y, m] = month.split('-').map(Number)
+      const start = `${month}-01`
+      const end = new Date(y, m, 1).toISOString().slice(0, 10)
+      const { data } = await supabase.from('goods_receipt_items')
+        .select('quantity, unit_price, goods_receipts!inner(receipt_date, supplier_id, invoice_number)')
+        .eq('ingredient_id', ingredient.id).not('unit_price', 'is', null)
+        .gte('goods_receipts.receipt_date', start).lt('goods_receipts.receipt_date', end)
+      const list = (data || []).map(r => ({
+        date: r.goods_receipts.receipt_date, supplier_id: r.goods_receipts.supplier_id,
+        invoice: r.goods_receipts.invoice_number, qty: Number(r.quantity), price: Number(r.unit_price),
+      })).sort((a, b) => a.date.localeCompare(b.date))
+      setRows(list)
+      setLoading(false)
+    }
+    load()
+  }, [month, ingredient.id])
+
+  const prices = rows.map(r => r.price)
+  const min = prices.length ? Math.min(...prices) : 0
+  const max = prices.length ? Math.max(...prices) : 0
+  const totalQty = rows.reduce((a, r) => a + r.qty, 0)
+  const wavg = totalQty > 0 ? rows.reduce((a, r) => a + r.price * r.qty, 0) / totalQty : 0
+  const avg = prices.length ? prices.reduce((a, b) => a + b, 0) / prices.length : 0
+
+  // γράφημα SVG
+  const W = 560, H = 160, pad = 28
+  const lo = min === max ? min * 0.9 : min, hi = min === max ? max * 1.1 : max
+  const x = i => rows.length === 1 ? W / 2 : pad + (i * (W - 2 * pad)) / (rows.length - 1)
+  const y = v => hi === lo ? H / 2 : H - pad - ((v - lo) / (hi - lo)) * (H - 2 * pad)
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" style={{ width: 640 }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <h2 style={{ marginTop: 0 }}>{t('priceHistory')} — {ingredient.name}</h2>
+          <button className="icon-btn" onClick={onClose}><X /></button>
+        </div>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginBottom: 12 }}>
+          <input type="month" value={month} onChange={e => setMonth(e.target.value)} />
+          <span style={{ fontSize: 13 }}>{t('currentPrice')}: <strong>{Number(ingredient.current_price).toFixed(3)} €/{ingredient.unit}</strong></span>
+        </div>
+        {loading ? <p>{t('loading')}</p> : rows.length === 0 ? <p>{t('noPriceData')}</p> : (
+          <>
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 12 }}>
+              <div><div className="stat-label">{t('minPrice')}</div><strong>{min.toFixed(3)} €</strong></div>
+              <div><div className="stat-label">{t('maxPrice')}</div><strong>{max.toFixed(3)} €</strong></div>
+              <div><div className="stat-label">{t('avgPrice')}</div><strong>{avg.toFixed(3)} €</strong></div>
+              <div><div className="stat-label">{t('weightedAvg')}</div><strong>{wavg.toFixed(3)} €</strong></div>
+            </div>
+            <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', background: 'var(--olive-50)', borderRadius: 8, marginBottom: 12 }}>
+              <polyline fill="none" stroke="var(--olive-600)" strokeWidth="2" points={rows.map((r, i) => `${x(i)},${y(r.price)}`).join(' ')} />
+              {rows.map((r, i) => (
+                <g key={i}>
+                  <circle cx={x(i)} cy={y(r.price)} r="4" fill="var(--olive-700)" />
+                  <text x={x(i)} y={y(r.price) - 8} fontSize="10" textAnchor="middle" fill="var(--ink)">{r.price.toFixed(2)}</text>
+                  <text x={x(i)} y={H - 6} fontSize="9" textAnchor="middle" fill="#6b6b5f">{r.date.slice(8, 10)}/{r.date.slice(5, 7)}</text>
+                </g>
+              ))}
+            </svg>
+            <div style={{ maxHeight: 200, overflowY: 'auto' }}>
+              <table>
+                <thead><tr><th>{t('date')}</th><th>{t('supplier')}</th><th>{t('quantity')}</th><th>{t('unitPrice')}</th></tr></thead>
+                <tbody>
+                  {[...rows].reverse().map((r, i) => (
+                    <tr key={i}>
+                      <td>{r.date}</td>
+                      <td>{suppliers.find(s => s.id === r.supplier_id)?.name || '-'}</td>
+                      <td>{r.qty} {ingredient.unit}</td>
+                      <td>{r.price.toFixed(3)} €</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </>
         )}

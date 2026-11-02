@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useStores } from '../context/StoreContext'
 import { useLanguage } from '../context/LanguageContext'
 import { Download } from 'lucide-react'
+import { priceIncreases } from '../lib/prices'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { notoSansBase64 } from '../assets/notoSansFont'
@@ -22,6 +23,7 @@ export default function Dashboard() {
   const [recentMovements, setRecentMovements] = useState([])
   const [storeSummary, setStoreSummary] = useState([])
   const [pendingOrdersList, setPendingOrdersList] = useState([])
+  const [priceAlerts, setPriceAlerts] = useState([])
 
   useEffect(() => {
     async function load() {
@@ -43,6 +45,17 @@ export default function Dashboard() {
         supabase.from('stock_movements').select('*, ingredients(name), stores(name)').order('created_at', { ascending: false }).limit(8),
         supabase.from('stores').select('*').eq('active', true),
       ])
+
+      const since = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10)
+      const { data: priceRows } = await supabase.from('goods_receipt_items')
+        .select('ingredient_id, unit_price, goods_receipts!inner(receipt_date)')
+        .not('unit_price', 'is', null).gte('goods_receipts.receipt_date', since)
+      const recent = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10)
+      setPriceAlerts(
+        priceIncreases((priceRows || []).map(r => ({ ingredient_id: r.ingredient_id, unit_price: r.unit_price, date: r.goods_receipts.receipt_date })))
+          .filter(a => a.date >= recent).slice(0, 8)
+          .map(a => ({ ...a, name: (ingredients || []).find(i => i.id === a.ingredient_id)?.name || '' }))
+      )
 
       const ingMap = Object.fromEntries((ingredients || []).map((i) => [i.id, i]))
       const costRows = (recipes || []).map((r) => {
@@ -192,6 +205,23 @@ export default function Dashboard() {
           <div className="stat-value" style={{ color: stats.lowStock > 0 ? 'var(--danger)' : 'var(--ok)' }}>{stats.lowStock}</div>
         </div>
       </div>
+
+      {priceAlerts.length > 0 && (
+        <div className="card" style={{ marginBottom: 20, borderColor: 'var(--danger)' }}>
+          <h2 style={{ marginTop: 0, color: 'var(--danger)' }}>{t('priceIncreases')}</h2>
+          <table>
+            <thead><tr><th>{t('ingredient')}</th><th>{t('previousPrice')}</th><th>{t('newPrice')}</th><th></th></tr></thead>
+            <tbody>
+              {priceAlerts.map(a => (
+                <tr key={a.ingredient_id}>
+                  <td>{a.name}</td><td>{a.prev.toFixed(3)} €</td><td>{a.last.toFixed(3)} €</td>
+                  <td><span className="badge badge-danger">+{a.pct.toFixed(0)}%</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <div className="grid grid-2" style={{ marginBottom: 20 }}>
         <div className="card">
