@@ -5,6 +5,7 @@ import { useStores } from '../context/StoreContext'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
 import { logActivity } from '../lib/activity'
+import { Trash2 } from 'lucide-react'
 
 export default function Users() {
   const { stores } = useStores()
@@ -61,6 +62,14 @@ export default function Users() {
     load()
   }
 
+  async function deleteUser(u) {
+    if (!confirm(`${t('confirmDelete')} ${u.email}`)) return
+    const { error } = await supabase.rpc('delete_user', { p_user: u.id })
+    if (error) { alert(error.message); return }
+    await logActivity('delete', 'user', u.email)
+    load()
+  }
+
   async function updateField(userRow, field, value) {
     setSavingId(userRow.id)
     const payload = { [field]: value || null }
@@ -103,7 +112,7 @@ export default function Users() {
       <div className="card">
         {loading ? <p>{t('loading')}</p> : (
           <table>
-            <thead><tr><th>Email</th><th>{t('role')}</th><th>{t('store')}</th>{isPlatformAdmin && <th>{t('company')}</th>}</tr></thead>
+            <thead><tr><th>Email</th><th>{t('role')}</th><th>{t('store')}</th>{isPlatformAdmin && <th>{t('company')}</th>}<th></th></tr></thead>
             <tbody>
               {users.map((u) => (
                 <tr key={u.id}>
@@ -141,9 +150,14 @@ export default function Users() {
                       </select>
                     </td>
                   )}
+                  <td>
+                    {u.id !== myProfile?.id && (
+                      <button className="icon-btn danger" onClick={() => deleteUser(u)}><Trash2 size={16} /></button>
+                    )}
+                  </td>
                 </tr>
               ))}
-              {users.length === 0 && <tr><td colSpan={4}>{t('noUsers')}</td></tr>}
+              {users.length === 0 && <tr><td colSpan={5}>{t('noUsers')}</td></tr>}
             </tbody>
           </table>
         )}
