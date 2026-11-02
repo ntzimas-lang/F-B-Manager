@@ -3,11 +3,14 @@ import { supabase } from '../lib/supabase'
 import { logActivity } from '../lib/activity'
 import { useStores } from '../context/StoreContext'
 import { useLanguage } from '../context/LanguageContext'
+import { useAuth } from '../context/AuthContext'
 import { Plus, Trash2, Pencil, X } from 'lucide-react'
 
 export default function Stores() {
   const { stores, loading } = useStores()
   const { t } = useLanguage()
+  const { maxStores, isPlatformAdmin } = useAuth()
+  const limitReached = !isPlatformAdmin && stores.length >= maxStores
   const [show, setShow] = useState(false)
   const [editing, setEditing] = useState(null) // null = νέο, αντικείμενο = επεξεργασία
 
@@ -26,8 +29,12 @@ export default function Stores() {
     <div>
       <div className="topbar" style={{marginBottom:16}}>
         <h1>{t('stores')}</h1>
-        <button className="btn" onClick={openNew}><Plus size={16}/> {t('newStore')}</button>
+        <div style={{display:'flex', gap:12, alignItems:'center'}}>
+          {maxStores < 9999 && <span style={{fontSize:13}}>{stores.length} / {maxStores}</span>}
+          <button className="btn" onClick={openNew} disabled={limitReached}><Plus size={16}/> {t('newStore')}</button>
+        </div>
       </div>
+      {limitReached && <div className="card" style={{marginBottom:16, background:'var(--olive-50)'}}>{t('storeLimitReached')}</div>}
       <div className="card">
         {loading ? <p>{t('loading')}</p> : (
           <table>
@@ -38,7 +45,7 @@ export default function Stores() {
                   <td>{s.name}</td><td>{s.code}</td><td>{s.address}</td>
                   <td style={{ display: 'flex', gap: 8 }}>
                     <button className="icon-btn" onClick={() => openEdit(s)}><Pencil size={16}/></button>
-                    <button className="icon-btn danger" onClick={() => remove(s.id)}><Trash2 size={16}/></button>
+                    {isPlatformAdmin && <button className="icon-btn danger" onClick={() => remove(s.id)}><Trash2 size={16}/></button>}
                   </td>
                 </tr>
               ))}
@@ -63,7 +70,8 @@ function StoreFormModal({ store, onClose, onSaved }) {
       await supabase.from('stores').update(form).eq('id', store.id)
       await logActivity('update', 'store', form.name)
     } else {
-      await supabase.from('stores').insert({ ...form, active: true })
+      const { error } = await supabase.from('stores').insert({ ...form, active: true })
+      if (error) { alert(/limit/i.test(error.message) ? t('storeLimitReached') : error.message); return }
       await logActivity('create', 'store', form.name)
     }
     onSaved()

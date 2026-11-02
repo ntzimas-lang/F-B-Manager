@@ -98,7 +98,7 @@ export default function Companies() {
       </div>
       <div className="card">
         <table>
-          <thead><tr><th>{t('company')}</th><th>{t('plan')}</th><th>{t('usersCount')}</th><th></th></tr></thead>
+          <thead><tr><th>{t('company')}</th><th>{t('plan')}</th><th>{t('usersCount')}</th><th>{t('storeLimit')}</th><th></th></tr></thead>
           <tbody>
             {companies.map(c => (
               <Fragment key={c.id}>
@@ -110,11 +110,12 @@ export default function Companies() {
                   </select>
                 </td>
                 <td>{profiles.filter(p => p.company_id === c.id).length}</td>
+                <td>{'max_stores' in c && <input type="number" min="0" style={{ width: 70 }} defaultValue={c.max_stores} onBlur={e => Number(e.target.value) !== c.max_stores && update(c.id, { max_stores: Number(e.target.value) })} />}</td>
                 <td>{'features' in c && <button className="btn btn-outline" onClick={() => setOpenId(openId === c.id ? null : c.id)}>{t('customizeModules')}{Array.isArray(c.features) ? ' *' : ''}</button>}</td>
               </tr>
               {openId === c.id && (
                 <tr>
-                  <td colSpan={4}>
+                  <td colSpan={5}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 10 }}>
                       {TOGGLEABLE.map(f => (
                         <label key={f} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -128,7 +129,7 @@ export default function Companies() {
               )}
               </Fragment>
             ))}
-            {companies.length === 0 && <tr><td colSpan={4}>{t('noCompanies')}</td></tr>}
+            {companies.length === 0 && <tr><td colSpan={5}>{t('noCompanies')}</td></tr>}
           </tbody>
         </table>
       </div>

@@ -25,6 +25,7 @@ export const translations = {
     unitPrice: 'Τιμή μονάδας', priceAlert: 'Αύξηση τιμής', priceIncreases: 'Αυξήσεις τιμών (τελευταίες 30 ημέρες)', previousPrice: 'Προηγούμενη', newPrice: 'Νέα',
     priceHistory: 'Ιστορικό τιμών', currentPrice: 'Τρέχουσα τιμή', noPriceData: 'Δεν υπάρχουν τιμές αγοράς για αυτόν τον μήνα. Γράφονται από τη σελίδα Παραλαβή.',
     minPrice: 'Ελάχιστη', maxPrice: 'Μέγιστη', avgPrice: 'Μέση', weightedAvg: 'Μέση σταθμισμένη',
+    storeLimit: 'Όριο καταστημάτων', storeLimitReached: 'Έχεις φτάσει το όριο καταστημάτων του πακέτου σου. Επικοινώνησε μαζί μας για να προσθέσεις κατάστημα.',
     // Login
     login: 'Σύνδεση', wrongCredentials: 'Λάθος email ή κωδικός.',
     // Dashboard
@@ -98,6 +99,7 @@ export const translations = {
     noUsers: 'Δεν υπάρχουν χρήστες ακόμα.',
   },
   en: {
+    storeLimit: 'Store limit', storeLimitReached: 'You have reached the store limit of your plan. Contact us to add a store.',
     unitPrice: 'Unit price', priceAlert: 'Price increase', priceIncreases: 'Price increases (last 30 days)', previousPrice: 'Previous', newPrice: 'New',
     priceHistory: 'Price history', currentPrice: 'Current price', noPriceData: 'No purchase prices for this month. They are recorded from the Receiving page.',
     minPrice: 'Min', maxPrice: 'Max', avgPrice: 'Average', weightedAvg: 'Weighted average',
