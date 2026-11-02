@@ -16,71 +16,68 @@ export default function Layout() {
       <div className={'sidebar-backdrop' + (menuOpen ? ' open' : '')} onClick={() => setMenuOpen(false)} />
       <aside className={'sidebar' + (menuOpen ? ' open' : '')} onClick={(e) => { if (e.target.closest('a')) setMenuOpen(false) }}>
         <div className="sidebar-logo">F&B <span>Manager</span></div>
-{hasFeature('dashboard') && (
-        <NavLink to="/" end className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
-          <LayoutDashboard size={18} /> {t('dashboard')}
-        </NavLink>
+        {hasFeature('dashboard') && (
+          <NavLink to="/" end className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
+            <LayoutDashboard size={18} /> {t('dashboard')}
+          </NavLink>
         )}
-{hasFeature('stores') && (
-        <NavLink to="/stores" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
-          <Store size={18} /> {t('stores')}
-        </NavLink>
+        {(hasFeature('orders') || hasFeature('receiving') || hasFeature('sales') || hasFeature('inventory') || hasFeature('stocktake')) && <div className="nav-group-label">{lang === 'el' ? 'Καθημερινά' : 'Daily'}</div>}
+        {hasFeature('orders') && (
+          <NavLink to="/orders" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
+            <Truck size={18} /> {t('orders')}
+          </NavLink>
         )}
-{hasFeature('staff') && (
-        <NavLink to="/staff" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
-          <Users size={18} /> {t('staff')}
-        </NavLink>
+        {hasFeature('receiving') && (
+          <NavLink to="/receiving" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
+            <PackageCheck size={18} /> {t('receiving')}
+          </NavLink>
         )}
-
-        {hasFeature('recipes') && <div className="nav-group-label">{lang === 'el' ? 'Μενού' : 'Menu'}</div>}
-{hasFeature('recipes') && (
-        <NavLink to="/recipes" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
-          <ChefHat size={18} /> {t('recipes')}
-        </NavLink>
+        {hasFeature('sales') && (
+          <NavLink to="/sales" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
+            <Receipt size={18} /> {t('sales')}
+          </NavLink>
         )}
-{hasFeature('costing') && (
-        <NavLink to="/costing" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
-          <Calculator size={18} /> {t('costing')}
-        </NavLink>
+        {hasFeature('inventory') && (
+          <NavLink to="/inventory" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
+            <Boxes size={18} /> {t('inventory')}
+          </NavLink>
         )}
-
-        <div className="nav-group-label">{lang === 'el' ? 'Λειτουργία' : 'Operations'}</div>
-{hasFeature('ingredients') && (
-        <NavLink to="/ingredients" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
-          <Wheat size={18} /> {t('ingredients')}
-        </NavLink>
+        {hasFeature('stocktake') && (
+          <NavLink to="/stocktake" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
+            <ClipboardCheck size={18} /> {t('stocktake')}
+          </NavLink>
         )}
-{hasFeature('receiving') && (
-        <NavLink to="/receiving" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
-          <PackageCheck size={18} /> {t('receiving')}
-        </NavLink>
+        {(hasFeature('ingredients') || hasFeature('recipes') || hasFeature('costing')) && <div className="nav-group-label">{lang === 'el' ? 'Μενού & Κόστος' : 'Menu & Costs'}</div>}
+        {hasFeature('ingredients') && (
+          <NavLink to="/ingredients" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
+            <Wheat size={18} /> {t('ingredients')}
+          </NavLink>
         )}
-{hasFeature('inventory') && (
-        <NavLink to="/inventory" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
-          <Boxes size={18} /> {t('inventory')}
-        </NavLink>
+        {hasFeature('recipes') && (
+          <NavLink to="/recipes" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
+            <ChefHat size={18} /> {t('recipes')}
+          </NavLink>
         )}
-{hasFeature('sales') && (
-        <NavLink to="/sales" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
-          <Receipt size={18} /> {t('sales')}
-        </NavLink>
+        {hasFeature('costing') && (
+          <NavLink to="/costing" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
+            <Calculator size={18} /> {t('costing')}
+          </NavLink>
         )}
-{hasFeature('stocktake') && (
-        <NavLink to="/stocktake" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
-          <ClipboardCheck size={18} /> {t('stocktake')}
-        </NavLink>
+        {(hasFeature('stores') || hasFeature('staff') || hasFeature('activity') || hasFeature('users')) && <div className="nav-group-label">{lang === 'el' ? 'Διαχείριση' : 'Management'}</div>}
+        {hasFeature('stores') && (
+          <NavLink to="/stores" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
+            <Store size={18} /> {t('stores')}
+          </NavLink>
         )}
-{hasFeature('orders') && (
-        <NavLink to="/orders" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
-          <Truck size={18} /> {t('orders')}
-        </NavLink>
+        {hasFeature('staff') && (
+          <NavLink to="/staff" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
+            <Users size={18} /> {t('staff')}
+          </NavLink>
         )}
-
-        <div className="nav-group-label">{lang === 'el' ? 'Διαχείριση' : 'Management'}</div>
-{hasFeature('activity') && (
-        <NavLink to="/activity" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
-          <History size={18} /> {t('activity')}
-        </NavLink>
+        {hasFeature('activity') && (
+          <NavLink to="/activity" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
+            <History size={18} /> {t('activity')}
+          </NavLink>
         )}
         {isPlatformAdmin && (
           <NavLink to="/companies" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
