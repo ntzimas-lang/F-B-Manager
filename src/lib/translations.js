@@ -18,6 +18,10 @@ export const translations = {
     newCustomerUser: 'Νέος χρήστης πελάτη', userFormHint: 'Συμπλήρωσε email, κωδικό (6+ χαρακτήρες) και εταιρεία.', userCreated: 'Ο χρήστης δημιουργήθηκε και συνδέθηκε με την εταιρεία.',
     customizeModules: 'Ενότητες', resetToPlan: 'Επαναφορά στο πακέτο',
     addUser: 'Προσθήκη χρήστη', userFormHint2: 'Συμπλήρωσε email, κωδικό (6+ χαρακτήρες) και, για υπεύθυνο καταστήματος, κατάστημα.',
+    forgotPassword: 'Ξέχασα τον κωδικό μου', enterEmailFirst: 'Γράψε πρώτα το email σου.', resetSent: 'Σου στείλαμε email με σύνδεσμο για νέο κωδικό.', newPassword: 'Νέος κωδικός', passwordMin: 'Ο κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες.',
+    importExcel: 'Εισαγωγή από Excel', importHelp: 'Αρχείο .xlsx ή .csv με στήλες: Όνομα, Μονάδα, Τιμή, Προμηθευτής, Όριο ειδοποίησης (η πρώτη γραμμή είναι επικεφαλίδες). Υπάρχουσες πρώτες ύλες δεν αλλάζουν.',
+    downloadTemplate: 'Κατέβασε πρότυπο', importEmpty: 'Δεν βρέθηκαν γραμμές.', importReadError: 'Δεν διαβάστηκε το αρχείο.', importDone: 'Εισήχθησαν {n} πρώτες ύλες.',
+    importOk: 'Νέα', importExists: 'Υπάρχει ήδη', importBadUnit: 'Άγνωστη μονάδα', importBtn: 'Εισαγωγή',
     // Login
     login: 'Σύνδεση', wrongCredentials: 'Λάθος email ή κωδικός.',
     // Dashboard
@@ -91,6 +95,10 @@ export const translations = {
     noUsers: 'Δεν υπάρχουν χρήστες ακόμα.',
   },
   en: {
+    importExcel: 'Import from Excel', importHelp: '.xlsx or .csv file with columns: Name, Unit, Price, Supplier, Alert threshold (first row is headers). Existing ingredients are not changed.',
+    downloadTemplate: 'Download template', importEmpty: 'No rows found.', importReadError: 'Could not read the file.', importDone: '{n} ingredients imported.',
+    importOk: 'New', importExists: 'Already exists', importBadUnit: 'Unknown unit', importBtn: 'Import',
+    forgotPassword: 'Forgot my password', enterEmailFirst: 'Enter your email first.', resetSent: 'We sent you an email with a link to set a new password.', newPassword: 'New password', passwordMin: 'Password must be at least 6 characters.',
     addUser: 'Add user', userFormHint2: 'Fill in email, password (6+ characters) and, for a store manager, a store.',
     customizeModules: 'Modules', resetToPlan: 'Reset to plan',
     newCustomerUser: 'New customer user', userFormHint: 'Fill in email, password (6+ characters) and company.', userCreated: 'User created and linked to the company.',

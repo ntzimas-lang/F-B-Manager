@@ -18,6 +18,7 @@ import Staff from './pages/Staff'
 import ActivityLog from './pages/ActivityLog'
 import Users from './pages/Users'
 import Companies from './pages/Companies'
+import SetPassword from './pages/SetPassword'
 
 function Feature({ name, children }) {
   const { hasFeature } = useAuth()
@@ -27,7 +28,7 @@ function Feature({ name, children }) {
 }
 
 function Gate() {
-  const { session, loading, profile, isPlatformAdmin, signOut } = useAuth()
+  const { session, loading, profile, isPlatformAdmin, signOut, recovery } = useAuth()
   const { t } = useLanguage()
 
   if (loading) {
@@ -35,6 +36,9 @@ function Gate() {
   }
   if (!session) {
     return <Login />
+  }
+  if (recovery) {
+    return <SetPassword />
   }
 
   if (profile && 'company_id' in profile && !profile.company_id && !isPlatformAdmin) {

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
 
@@ -9,6 +10,14 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [info, setInfo] = useState('')
+
+  async function forgot() {
+    setError(''); setInfo('')
+    if (!email) { setError(t('enterEmailFirst')); return }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin })
+    if (error) setError(error.message); else setInfo(t('resetSent'))
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -35,7 +44,7 @@ export default function Login() {
         >English</button>
       </div>
 
-      <form onSubmit={handleSubmit} className="card" style={{ width: 360 }}>
+      <form onSubmit={handleSubmit} className="card" style={{ width: 360, maxWidth: '92vw' }}>
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--olive-900)' }}>F&B <span style={{ color: 'var(--olive-600)' }}>Manager</span></div>
           <div style={{ fontSize: 13, color: '#6b6b5f', marginTop: 4 }}>{t('login')}</div>
@@ -55,6 +64,10 @@ export default function Login() {
         <button className="btn" type="submit" style={{ width: '100%' }} disabled={loading}>
           {loading ? `${t('loading')}` : t('login')}
         </button>
+        {info && <div style={{ color: 'var(--ok)', fontSize: 13, marginTop: 12 }}>{info}</div>}
+        <div style={{ textAlign: 'center', marginTop: 14 }}>
+          <button type="button" onClick={forgot} style={{ background: 'none', border: 'none', color: 'var(--olive-700)', cursor: 'pointer', fontSize: 13, textDecoration: 'underline' }}>{t('forgotPassword')}</button>
+        </div>
       </form>
     </div>
   )

@@ -200,3 +200,24 @@ input, select {
   background: none; border: none; cursor: pointer; color: var(--olive-700);
 }
 .icon-btn.danger { color: var(--danger); }
+
+/* Mobile */
+.menu-btn { display: none; background: var(--olive-900); color: #fff; border: none; border-radius: 8px; padding: 8px 10px; cursor: pointer; }
+.sidebar-backdrop { display: none; }
+@media (max-width: 800px) {
+  .menu-btn { display: inline-flex; align-items: center; }
+  .sidebar {
+    position: fixed; top: 0; bottom: 0; left: 0; z-index: 60;
+    overflow-y: auto; transform: translateX(-100%); transition: transform 0.2s;
+  }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-backdrop.open { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 55; }
+  .main-content { padding: 16px; width: 100%; }
+  .card { overflow-x: auto; }
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .grid-2 { grid-template-columns: 1fr; }
+  .topbar { gap: 8px; flex-wrap: wrap; }
+  h1 { font-size: 20px; }
+  .modal { padding: 16px; }
+  .stat-value { font-size: 22px; }
+}

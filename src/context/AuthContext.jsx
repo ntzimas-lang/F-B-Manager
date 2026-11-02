@@ -8,13 +8,15 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [recovery, setRecovery] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setLoading(false)
     })
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') setRecovery(true)
       setSession(session)
     })
     return () => listener.subscription.unsubscribe()
@@ -49,7 +51,7 @@ export function AuthProvider({ children }) {
   const hasFeature = (f) => (Array.isArray(custom) ? [...custom, 'dashboard', 'stores', 'users'] : (PLAN_FEATURES[plan] || PLAN_FEATURES.premium)).includes(f)
 
   return (
-    <AuthContext.Provider value={{ session, profile, loading, signIn, signUp, signOut, plan, isPlatformAdmin, hasFeature }}>
+    <AuthContext.Provider value={{ session, profile, loading, signIn, signUp, signOut, recovery, setRecovery, plan, isPlatformAdmin, hasFeature }}>
       {children}
     </AuthContext.Provider>
   )

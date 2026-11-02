@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
-import { LayoutDashboard, ChefHat, Calculator, Boxes, Truck, Store, ClipboardCheck, Users, Wheat, History, LogOut, Receipt, UserCog, PackageCheck, Building2 } from 'lucide-react'
+import { LayoutDashboard, ChefHat, Calculator, Boxes, Truck, Store, ClipboardCheck, Users, Wheat, History, LogOut, Menu, Receipt, UserCog, PackageCheck, Building2 } from 'lucide-react'
 import { useStores } from '../context/StoreContext'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
@@ -8,10 +9,12 @@ export default function Layout() {
   const { stores, selectedStoreId, selectStore, loading } = useStores()
   const { profile, session, signOut, hasFeature, isPlatformAdmin } = useAuth()
   const { lang, chooseLang, t } = useLanguage()
+  const [menuOpen, setMenuOpen] = useState(false)
 
   return (
     <div className="app-shell">
-      <aside className="sidebar">
+      <div className={'sidebar-backdrop' + (menuOpen ? ' open' : '')} onClick={() => setMenuOpen(false)} />
+      <aside className={'sidebar' + (menuOpen ? ' open' : '')} onClick={(e) => { if (e.target.closest('a')) setMenuOpen(false) }}>
         <div className="sidebar-logo">F&B <span>Manager</span></div>
 {hasFeature('dashboard') && (
         <NavLink to="/" end className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
@@ -123,7 +126,7 @@ export default function Layout() {
       </aside>
       <main className="main-content">
         <div className="topbar">
-          <div />
+          <button className="menu-btn" onClick={() => setMenuOpen(true)}><Menu size={20} /></button>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             {!loading && (
               <select
