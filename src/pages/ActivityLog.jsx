@@ -14,7 +14,7 @@ export default function ActivityLog() {
   const ENTITY_LABELS = {
     store: t('entityStore'), recipe: t('entityRecipe'), ingredient: t('entityIngredient'), recipe_ingredient: t('entityRecipeIngredient'),
     supplier: t('entitySupplier'), order: t('entityOrder'), order_item: t('entityOrderItem'), stock_movement: t('entityStockMovement'),
-    stocktake: t('entityStocktake'), employee: t('entityEmployee'), shift: t('entityShift'), sale: t('entitySale'), user: t('entityUser'),
+    stocktake: t('entityStocktake'), employee: t('entityEmployee'), shift: t('entityShift'), sale: t('entitySale'), user: t('entityUser'), receipt: t('entityReceipt'),
   }
 
   async function load() {

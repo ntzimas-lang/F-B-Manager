@@ -9,6 +9,10 @@ export const translations = {
     name: 'Όνομα', email: 'Email', password: 'Κωδικός', loading: 'Φόρτωση...', confirmDelete: 'Διαγραφή;',
     all: 'Όλα', allStores: 'Όλα τα καταστήματα', role: 'Ρόλος', store: 'Κατάστημα', selectOption: 'Επιλογή...',
     date: 'Ημερομηνία', quantity: 'Ποσότητα', price: 'Τιμή', unit: 'Μονάδα', category: 'Κατηγορία', notes: 'Σημειώσεις',
+    receiving: 'Παραλαβή', newReceipt: 'Νέα Παραλαβή', invoiceQr: 'QR / Link Τιμολογίου', invoiceQrHint: 'Σάρωσε το QR ή επικόλλησε το link',
+    scan: 'Σάρωση', cameraError: 'Δεν άνοιξε η κάμερα. Έλεγξε τις άδειες ή επικόλλησε το link.', duplicateInvoice: 'Αυτό το τιμολόγιο έχει ήδη καταχωρηθεί!',
+    invoiceNumber: 'Αρ. Τιμολογίου', addLine: 'Προσθήκη γραμμής', recordReceipt: 'Καταχώρηση Παραλαβής',
+    receiptHistory: 'Ιστορικό Παραλαβών', products: 'Προϊόντα', entityReceipt: 'Παραλαβή',
     // Login
     login: 'Σύνδεση', wrongCredentials: 'Λάθος email ή κωδικός.',
     // Dashboard
@@ -82,6 +86,10 @@ export const translations = {
     noUsers: 'Δεν υπάρχουν χρήστες ακόμα.',
   },
   en: {
+    receiving: 'Receiving', newReceipt: 'New Receipt', invoiceQr: 'Invoice QR / Link', invoiceQrHint: 'Scan the QR or paste the link',
+    scan: 'Scan', cameraError: 'Camera could not open. Check permissions or paste the link.', duplicateInvoice: 'This invoice has already been recorded!',
+    invoiceNumber: 'Invoice No.', addLine: 'Add line', recordReceipt: 'Record Receipt',
+    receiptHistory: 'Receipt History', products: 'Products', entityReceipt: 'Receipt',
     dashboard: 'Dashboard', stores: 'Stores', recipes: 'Menu & Recipes', ingredients: 'Ingredients',
     costing: 'Food Costing', inventory: 'Inventory', sales: 'Sales', stocktake: 'Stocktake', orders: 'Orders',
     staff: 'Staff & Shifts', activity: 'Activity', users: 'Users', logout: 'Log Out',

@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { LayoutDashboard, ChefHat, Calculator, Boxes, Truck, Store, ClipboardCheck, Users, Wheat, History, LogOut, Receipt, UserCog } from 'lucide-react'
+import { LayoutDashboard, ChefHat, Calculator, Boxes, Truck, Store, ClipboardCheck, Users, Wheat, History, LogOut, Receipt, UserCog, PackageCheck } from 'lucide-react'
 import { useStores } from '../context/StoreContext'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
@@ -34,6 +34,9 @@ export default function Layout() {
         <div className="nav-group-label">{lang === 'el' ? 'Λειτουργία' : 'Operations'}</div>
         <NavLink to="/ingredients" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
           <Wheat size={18} /> {t('ingredients')}
+        </NavLink>
+        <NavLink to="/receiving" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
+          <PackageCheck size={18} /> {t('receiving')}
         </NavLink>
         <NavLink to="/inventory" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
           <Boxes size={18} /> {t('inventory')}

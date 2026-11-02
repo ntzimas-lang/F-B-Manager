@@ -12,6 +12,7 @@ import Costing from './pages/Costing'
 import Inventory from './pages/Inventory'
 import Sales from './pages/Sales'
 import Stocktake from './pages/Stocktake'
+import Receiving from './pages/Receiving'
 import Orders from './pages/Orders'
 import Staff from './pages/Staff'
 import ActivityLog from './pages/ActivityLog'
@@ -40,6 +41,7 @@ function Gate() {
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/sales" element={<Sales />} />
             <Route path="/stocktake" element={<Stocktake />} />
+            <Route path="/receiving" element={<Receiving />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/staff" element={<Staff />} />
             <Route path="/activity" element={<ActivityLog />} />
