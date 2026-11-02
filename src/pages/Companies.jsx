@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createClient } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
@@ -30,6 +31,31 @@ export default function Companies() {
     await supabase.from('companies').insert({ name: name.trim(), plan })
     setName(''); setPlan('basic'); load()
   }
+  const [uEmail, setUEmail] = useState('')
+  const [uPass, setUPass] = useState('')
+  const [uCompany, setUCompany] = useState('')
+  const [uMsg, setUMsg] = useState('')
+
+  async function addUser() {
+    setUMsg('')
+    if (!uEmail || uPass.length < 6 || !uCompany) { setUMsg(t('userFormHint')); return }
+    const temp = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false, storageKey: 'tmp-signup' },
+    })
+    const { data, error } = await temp.auth.signUp({ email: uEmail, password: uPass })
+    if (error || !data.user) { setUMsg(error?.message || 'Error'); return }
+    // το profile δημιουργείται αυτόματα· το συνδέουμε με την εταιρεία
+    let ok = false
+    for (let i = 0; i < 5 && !ok; i++) {
+      const { data: upd } = await supabase.from('profiles').update({ company_id: uCompany, role: 'super_user' }).eq('id', data.user.id).select()
+      ok = !!upd?.length
+      if (!ok) await new Promise(r => setTimeout(r, 500))
+    }
+    setUMsg(ok ? t('userCreated') : 'Error')
+    if (ok) { setUEmail(''); setUPass('') }
+    load()
+  }
+
   async function update(id, patch) {
     await supabase.from('companies').update(patch).eq('id', id)
     load()
@@ -46,6 +72,19 @@ export default function Companies() {
           {PLANS.map(p => <option key={p} value={p}>{PLAN_LABEL[p]}</option>)}
         </select>
         <button className="btn" onClick={add}><Plus size={16} /> {t('newCompany')}</button>
+      </div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <h2 style={{ marginTop: 0 }}>{t('newCustomerUser')}</h2>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <input placeholder="Email" value={uEmail} onChange={e => setUEmail(e.target.value)} />
+          <input placeholder={t('password')} value={uPass} onChange={e => setUPass(e.target.value)} />
+          <select value={uCompany} onChange={e => setUCompany(e.target.value)}>
+            <option value="">{t('company')}...</option>
+            {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+          <button className="btn" onClick={addUser}><Plus size={16} /> {t('add')}</button>
+        </div>
+        {uMsg && <p style={{ marginBottom: 0 }}>{uMsg}</p>}
       </div>
       <div className="card">
         <table>
