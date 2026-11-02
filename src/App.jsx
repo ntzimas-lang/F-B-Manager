@@ -19,6 +19,7 @@ import ActivityLog from './pages/ActivityLog'
 import Users from './pages/Users'
 import Companies from './pages/Companies'
 import SetPassword from './pages/SetPassword'
+import Admin from './pages/Admin'
 
 function Feature({ name, children }) {
   const { hasFeature } = useAuth()
@@ -67,6 +68,7 @@ function Gate() {
             <Route path="/orders" element={<Feature name="orders"><Orders /></Feature>} />
             <Route path="/staff" element={<Feature name="staff"><Staff /></Feature>} />
             <Route path="/activity" element={<Feature name="activity"><ActivityLog /></Feature>} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="/companies" element={<Companies />} />
             <Route path="/users" element={<Users />} />
           </Route>

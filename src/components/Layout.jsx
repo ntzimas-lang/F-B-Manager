@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
-import { LayoutDashboard, ChefHat, Calculator, Boxes, Truck, Store, ClipboardCheck, Users, Wheat, History, LogOut, Menu, Receipt, UserCog, PackageCheck, Building2 } from 'lucide-react'
+import { LayoutDashboard, ChefHat, Calculator, Boxes, Truck, Store, ClipboardCheck, Users, Wheat, History, LogOut, Menu, Receipt, UserCog, PackageCheck, Settings } from 'lucide-react'
 import { useStores } from '../context/StoreContext'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
@@ -63,12 +63,7 @@ export default function Layout() {
             <Calculator size={18} /> {t('costing')}
           </NavLink>
         )}
-        {(hasFeature('stores') || hasFeature('staff') || hasFeature('activity') || hasFeature('users')) && <div className="nav-group-label">{lang === 'el' ? 'Διαχείριση' : 'Management'}</div>}
-        {hasFeature('stores') && (
-          <NavLink to="/stores" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
-            <Store size={18} /> {t('stores')}
-          </NavLink>
-        )}
+        {true && <div className="nav-group-label">{lang === 'el' ? 'Διαχείριση' : 'Management'}</div>}
         {hasFeature('staff') && (
           <NavLink to="/staff" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
             <Users size={18} /> {t('staff')}
@@ -79,16 +74,9 @@ export default function Layout() {
             <History size={18} /> {t('activity')}
           </NavLink>
         )}
-        {isPlatformAdmin && (
-          <NavLink to="/companies" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
-            <Building2 size={18} /> {t('companies')}
-          </NavLink>
-        )}
-        {profile?.role === 'super_user' && (
-          <NavLink to="/users" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
-            <UserCog size={18} /> {t('users')}
-          </NavLink>
-        )}
+        <NavLink to="/admin" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
+          <Settings size={18} /> {t('settings')}
+        </NavLink>
 
         <div style={{ padding: '16px 20px 4px' }}>
           <div style={{ display: 'flex', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 6, overflow: 'hidden' }}>
