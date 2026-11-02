@@ -16,6 +16,7 @@ export const translations = {
     companies: 'Εταιρείες', company: 'Εταιρεία', plan: 'Πακέτο', newCompany: 'Νέα Εταιρεία', notInPlan: 'Αυτή η λειτουργία δεν περιλαμβάνεται στο πακέτο σου. Επικοινώνησε για αναβάθμιση.',
     noCompany: 'Ο λογαριασμός σου δεν έχει ακόμα συνδεθεί με εταιρεία. Επικοινώνησε με τον διαχειριστή.', noCompanies: 'Δεν υπάρχουν εταιρείες.', usersCount: 'Χρήστες',
     newCustomerUser: 'Νέος χρήστης πελάτη', userFormHint: 'Συμπλήρωσε email, κωδικό (6+ χαρακτήρες) και εταιρεία.', userCreated: 'Ο χρήστης δημιουργήθηκε και συνδέθηκε με την εταιρεία.',
+    customizeModules: 'Ενότητες', resetToPlan: 'Επαναφορά στο πακέτο',
     // Login
     login: 'Σύνδεση', wrongCredentials: 'Λάθος email ή κωδικός.',
     // Dashboard
@@ -89,6 +90,7 @@ export const translations = {
     noUsers: 'Δεν υπάρχουν χρήστες ακόμα.',
   },
   en: {
+    customizeModules: 'Modules', resetToPlan: 'Reset to plan',
     newCustomerUser: 'New customer user', userFormHint: 'Fill in email, password (6+ characters) and company.', userCreated: 'User created and linked to the company.',
     companies: 'Companies', company: 'Company', plan: 'Plan', newCompany: 'New Company', notInPlan: 'This feature is not included in your plan. Contact us to upgrade.',
     noCompany: 'Your account is not linked to a company yet. Please contact the administrator.', noCompanies: 'No companies yet.', usersCount: 'Users',

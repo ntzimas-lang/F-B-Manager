@@ -23,7 +23,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     async function loadProfile() {
       if (!session?.user) { setProfile(null); return }
-      let { data, error } = await supabase.from('profiles').select('*, companies(name, plan)').eq('id', session.user.id).maybeSingle()
+      let { data, error } = await supabase.from('profiles').select('*, companies(name, plan, features)').eq('id', session.user.id).maybeSingle()
       if (error) {
         const r = await supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle()
         data = r.data
@@ -45,7 +45,8 @@ export function AuthProvider({ children }) {
 
   const plan = profile?.companies?.plan || 'premium'
   const isPlatformAdmin = !!profile?.is_platform_admin
-  const hasFeature = (f) => (PLAN_FEATURES[plan] || PLAN_FEATURES.premium).includes(f)
+  const custom = profile?.companies?.features
+  const hasFeature = (f) => (Array.isArray(custom) ? [...custom, 'dashboard', 'stores', 'users'] : (PLAN_FEATURES[plan] || PLAN_FEATURES.premium)).includes(f)
 
   return (
     <AuthContext.Provider value={{ session, profile, loading, signIn, signUp, signOut, plan, isPlatformAdmin, hasFeature }}>

@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
-import { PLANS } from '../lib/plans'
+import { PLANS, PLAN_FEATURES, TOGGLEABLE } from '../lib/plans'
 import { Plus } from 'lucide-react'
 
 const PLAN_LABEL = { basic: 'Basic', pro: 'Pro', premium: 'Premium' }
@@ -56,6 +56,16 @@ export default function Companies() {
     load()
   }
 
+  const [openId, setOpenId] = useState(null)
+  function effective(c) {
+    return Array.isArray(c.features) ? c.features : PLAN_FEATURES[c.plan]
+  }
+  function toggle(c, f) {
+    const cur = effective(c)
+    const next = cur.includes(f) ? cur.filter(x => x !== f) : [...cur, f]
+    update(c.id, { features: next })
+  }
+
   async function update(id, patch) {
     await supabase.from('companies').update(patch).eq('id', id)
     load()
@@ -88,20 +98,37 @@ export default function Companies() {
       </div>
       <div className="card">
         <table>
-          <thead><tr><th>{t('company')}</th><th>{t('plan')}</th><th>{t('usersCount')}</th></tr></thead>
+          <thead><tr><th>{t('company')}</th><th>{t('plan')}</th><th>{t('usersCount')}</th><th></th></tr></thead>
           <tbody>
             {companies.map(c => (
-              <tr key={c.id}>
+              <Fragment key={c.id}>
+              <tr>
                 <td><input defaultValue={c.name} onBlur={e => e.target.value !== c.name && update(c.id, { name: e.target.value })} /></td>
                 <td>
-                  <select value={c.plan} onChange={e => update(c.id, { plan: e.target.value })}>
+                  <select value={c.plan} onChange={e => update(c.id, 'features' in c ? { plan: e.target.value, features: null } : { plan: e.target.value })}>
                     {PLANS.map(p => <option key={p} value={p}>{PLAN_LABEL[p]}</option>)}
                   </select>
                 </td>
                 <td>{profiles.filter(p => p.company_id === c.id).length}</td>
+                <td>{'features' in c && <button className="btn btn-outline" onClick={() => setOpenId(openId === c.id ? null : c.id)}>{t('customizeModules')}{Array.isArray(c.features) ? ' *' : ''}</button>}</td>
               </tr>
+              {openId === c.id && (
+                <tr>
+                  <td colSpan={4}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 10 }}>
+                      {TOGGLEABLE.map(f => (
+                        <label key={f} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                          <input type="checkbox" checked={effective(c).includes(f)} onChange={() => toggle(c, f)} /> {t(f)}
+                        </label>
+                      ))}
+                    </div>
+                    {Array.isArray(c.features) && <button className="btn btn-outline" onClick={() => update(c.id, { features: null })}>{t('resetToPlan')}</button>}
+                  </td>
+                </tr>
+              )}
+              </Fragment>
             ))}
-            {companies.length === 0 && <tr><td colSpan={3}>{t('noCompanies')}</td></tr>}
+            {companies.length === 0 && <tr><td colSpan={4}>{t('noCompanies')}</td></tr>}
           </tbody>
         </table>
       </div>
