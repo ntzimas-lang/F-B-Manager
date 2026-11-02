@@ -144,8 +144,8 @@ export default function Users() {
                   </td>
                   {isPlatformAdmin && (
                     <td>
-                      <select value={u.company_id || ''} disabled={savingId === u.id} onChange={(e) => updateField(u, 'company_id', e.target.value)}>
-                        <option value="">-</option>
+                      <select value={u.company_id || ''} disabled={savingId === u.id || u.id === myProfile?.id} onChange={(e) => e.target.value && updateField(u, 'company_id', e.target.value)}>
+                        <option value="" disabled>-</option>
                         {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                       </select>
                     </td>
