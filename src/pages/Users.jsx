@@ -7,7 +7,8 @@ import { logActivity } from '../lib/activity'
 
 export default function Users() {
   const { stores } = useStores()
-  const { profile: myProfile } = useAuth()
+  const { profile: myProfile, isPlatformAdmin } = useAuth()
+  const [companies, setCompanies] = useState([])
   const { t } = useLanguage()
   const ROLE_LABELS = {
     super_user: t('superUser'),
@@ -23,6 +24,7 @@ export default function Users() {
     setLoading(true)
     const { data } = await supabase.from('profiles').select('*, stores(name)').order('email')
     setUsers(data || [])
+    if (isPlatformAdmin) { const { data: c } = await supabase.from('companies').select('*').order('name'); setCompanies(c || []) }
     setLoading(false)
   }
   useEffect(() => { load() }, [])
@@ -37,7 +39,7 @@ export default function Users() {
     setSavingId(null)
   }
 
-  if (myProfile?.role !== 'super_user') {
+  if (myProfile?.role !== 'super_user' && !isPlatformAdmin) {
     return <div className="card">{t('superUserOnly')}</div>
   }
 
@@ -54,7 +56,7 @@ export default function Users() {
       <div className="card">
         {loading ? <p>{t('loading')}</p> : (
           <table>
-            <thead><tr><th>Email</th><th>{t('role')}</th><th>{t('store')}</th></tr></thead>
+            <thead><tr><th>Email</th><th>{t('role')}</th><th>{t('store')}</th>{isPlatformAdmin && <th>{t('company')}</th>}</tr></thead>
             <tbody>
               {users.map((u) => (
                 <tr key={u.id}>
@@ -84,9 +86,17 @@ export default function Users() {
                       <span style={{ color: '#8a8a7a' }}>{u.role === 'super_user' ? t('all') : '—'}</span>
                     )}
                   </td>
+                  {isPlatformAdmin && (
+                    <td>
+                      <select value={u.company_id || ''} disabled={savingId === u.id} onChange={(e) => updateField(u, 'company_id', e.target.value)}>
+                        <option value="">-</option>
+                        {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    </td>
+                  )}
                 </tr>
               ))}
-              {users.length === 0 && <tr><td colSpan={3}>{t('noUsers')}</td></tr>}
+              {users.length === 0 && <tr><td colSpan={4}>{t('noUsers')}</td></tr>}
             </tbody>
           </table>
         )}

@@ -13,6 +13,8 @@ export const translations = {
     scan: 'Σάρωση', cameraError: 'Δεν άνοιξε η κάμερα. Έλεγξε τις άδειες ή επικόλλησε το link.', duplicateInvoice: 'Αυτό το τιμολόγιο έχει ήδη καταχωρηθεί!',
     invoiceNumber: 'Αρ. Τιμολογίου', addLine: 'Προσθήκη γραμμής', recordReceipt: 'Καταχώρηση Παραλαβής',
     receiptHistory: 'Ιστορικό Παραλαβών', products: 'Προϊόντα', entityReceipt: 'Παραλαβή',
+    companies: 'Εταιρείες', company: 'Εταιρεία', plan: 'Πακέτο', newCompany: 'Νέα Εταιρεία', notInPlan: 'Αυτή η λειτουργία δεν περιλαμβάνεται στο πακέτο σου. Επικοινώνησε για αναβάθμιση.',
+    noCompany: 'Ο λογαριασμός σου δεν έχει ακόμα συνδεθεί με εταιρεία. Επικοινώνησε με τον διαχειριστή.', noCompanies: 'Δεν υπάρχουν εταιρείες.', usersCount: 'Χρήστες',
     // Login
     login: 'Σύνδεση', wrongCredentials: 'Λάθος email ή κωδικός.',
     // Dashboard
@@ -86,6 +88,8 @@ export const translations = {
     noUsers: 'Δεν υπάρχουν χρήστες ακόμα.',
   },
   en: {
+    companies: 'Companies', company: 'Company', plan: 'Plan', newCompany: 'New Company', notInPlan: 'This feature is not included in your plan. Contact us to upgrade.',
+    noCompany: 'Your account is not linked to a company yet. Please contact the administrator.', noCompanies: 'No companies yet.', usersCount: 'Users',
     receiving: 'Receiving', newReceipt: 'New Receipt', invoiceQr: 'Invoice QR / Link', invoiceQrHint: 'Scan the QR or paste the link',
     scan: 'Scan', cameraError: 'Camera could not open. Check permissions or paste the link.', duplicateInvoice: 'This invoice has already been recorded!',
     invoiceNumber: 'Invoice No.', addLine: 'Add line', recordReceipt: 'Record Receipt',

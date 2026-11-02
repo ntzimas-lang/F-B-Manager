@@ -1,60 +1,89 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { LayoutDashboard, ChefHat, Calculator, Boxes, Truck, Store, ClipboardCheck, Users, Wheat, History, LogOut, Receipt, UserCog, PackageCheck } from 'lucide-react'
+import { LayoutDashboard, ChefHat, Calculator, Boxes, Truck, Store, ClipboardCheck, Users, Wheat, History, LogOut, Receipt, UserCog, PackageCheck, Building2 } from 'lucide-react'
 import { useStores } from '../context/StoreContext'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
 
 export default function Layout() {
   const { stores, selectedStoreId, selectStore, loading } = useStores()
-  const { profile, session, signOut } = useAuth()
+  const { profile, session, signOut, hasFeature, isPlatformAdmin } = useAuth()
   const { lang, chooseLang, t } = useLanguage()
 
   return (
     <div className="app-shell">
       <aside className="sidebar">
         <div className="sidebar-logo">F&B <span>Manager</span></div>
+{hasFeature('dashboard') && (
         <NavLink to="/" end className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
           <LayoutDashboard size={18} /> {t('dashboard')}
         </NavLink>
+        )}
+{hasFeature('stores') && (
         <NavLink to="/stores" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
           <Store size={18} /> {t('stores')}
         </NavLink>
+        )}
+{hasFeature('staff') && (
         <NavLink to="/staff" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
           <Users size={18} /> {t('staff')}
         </NavLink>
+        )}
 
-        <div className="nav-group-label">{lang === 'el' ? 'Μενού' : 'Menu'}</div>
+        {hasFeature('recipes') && <div className="nav-group-label">{lang === 'el' ? 'Μενού' : 'Menu'}</div>}
+{hasFeature('recipes') && (
         <NavLink to="/recipes" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
           <ChefHat size={18} /> {t('recipes')}
         </NavLink>
+        )}
+{hasFeature('costing') && (
         <NavLink to="/costing" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
           <Calculator size={18} /> {t('costing')}
         </NavLink>
+        )}
 
         <div className="nav-group-label">{lang === 'el' ? 'Λειτουργία' : 'Operations'}</div>
+{hasFeature('ingredients') && (
         <NavLink to="/ingredients" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
           <Wheat size={18} /> {t('ingredients')}
         </NavLink>
+        )}
+{hasFeature('receiving') && (
         <NavLink to="/receiving" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
           <PackageCheck size={18} /> {t('receiving')}
         </NavLink>
+        )}
+{hasFeature('inventory') && (
         <NavLink to="/inventory" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
           <Boxes size={18} /> {t('inventory')}
         </NavLink>
+        )}
+{hasFeature('sales') && (
         <NavLink to="/sales" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
           <Receipt size={18} /> {t('sales')}
         </NavLink>
+        )}
+{hasFeature('stocktake') && (
         <NavLink to="/stocktake" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
           <ClipboardCheck size={18} /> {t('stocktake')}
         </NavLink>
+        )}
+{hasFeature('orders') && (
         <NavLink to="/orders" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
           <Truck size={18} /> {t('orders')}
         </NavLink>
+        )}
 
         <div className="nav-group-label">{lang === 'el' ? 'Διαχείριση' : 'Management'}</div>
+{hasFeature('activity') && (
         <NavLink to="/activity" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
           <History size={18} /> {t('activity')}
         </NavLink>
+        )}
+        {isPlatformAdmin && (
+          <NavLink to="/companies" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
+            <Building2 size={18} /> {t('companies')}
+          </NavLink>
+        )}
         {profile?.role === 'super_user' && (
           <NavLink to="/users" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
             <UserCog size={18} /> {t('users')}
