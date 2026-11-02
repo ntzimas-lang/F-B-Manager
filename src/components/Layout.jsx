@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
-import { LayoutDashboard, ChefHat, Calculator, Boxes, Truck, Store, ClipboardCheck, Users, Wheat, History, LogOut, Menu, Receipt, UserCog, PackageCheck, Settings } from 'lucide-react'
+import { LayoutDashboard, ChefHat, Calculator, Boxes, Truck, Store, ClipboardCheck, Users, Wheat, History, LogOut, Menu, Receipt, UserCog, PackageCheck, Settings, BarChart3 } from 'lucide-react'
 import { useStores } from '../context/StoreContext'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
@@ -19,6 +19,11 @@ export default function Layout() {
         {hasFeature('dashboard') && (
           <NavLink to="/" end className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
             <LayoutDashboard size={18} /> {t('dashboard')}
+          </NavLink>
+        )}
+        {hasFeature('reports') && (
+          <NavLink to="/reports" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
+            <BarChart3 size={18} /> {t('results')}
           </NavLink>
         )}
         {(hasFeature('orders') || hasFeature('receiving') || hasFeature('sales') || hasFeature('inventory') || hasFeature('stocktake')) && <div className="nav-group-label">{lang === 'el' ? 'Καθημερινά' : 'Daily'}</div>}

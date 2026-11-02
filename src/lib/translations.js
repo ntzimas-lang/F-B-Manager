@@ -27,6 +27,10 @@ export const translations = {
     minPrice: 'Ελάχιστη', maxPrice: 'Μέγιστη', avgPrice: 'Μέση', weightedAvg: 'Μέση σταθμισμένη',
     storeLimit: 'Όριο καταστημάτων', storeLimitReached: 'Έχεις φτάσει το όριο καταστημάτων του πακέτου σου. Επικοινώνησε μαζί μας για να προσθέσεις κατάστημα.',
     settings: 'Ρυθμίσεις',
+    results: 'Αποτελέσματα', month: 'Μήνας', quarter: 'Τρίμηνο', year: 'Έτος', season: 'Σεζόν', vsPrev: 'vs προηγ.', previousPeriod: 'Προηγούμενη περίοδος',
+    allStoresTotal: 'Σύνολο όλων των καταστημάτων. Διάλεξε κατάστημα από πάνω για ανάλυση ανά κατάστημα.', foodCostAmount: 'Κόστος Πρώτων Υλών', grossMargin: 'Μικτό Κέρδος',
+    purchases: 'Αγορές', wasteValue: 'Φύρα (αξία)', byMonth: 'Ανά μήνα', byDish: 'Ανά πιάτο', noSalesPeriod: 'Δεν υπάρχουν πωλήσεις αυτή την περίοδο.',
+    costNote: 'Το κόστος υπολογίζεται από τις συνταγές με τις τρέχουσες τιμές των πρώτων υλών. Οι αγορές αφορούν παραλαβές με καταχωρημένη τιμή.',
     // Login
     login: 'Σύνδεση', wrongCredentials: 'Λάθος email ή κωδικός.',
     // Dashboard
@@ -100,6 +104,10 @@ export const translations = {
     noUsers: 'Δεν υπάρχουν χρήστες ακόμα.',
   },
   en: {
+    results: 'Results', month: 'Month', quarter: 'Quarter', year: 'Year', season: 'Season', vsPrev: 'vs prev.', previousPeriod: 'Previous period',
+    allStoresTotal: 'Total for all stores. Pick a store above for a per-store breakdown.', foodCostAmount: 'Ingredient Cost', grossMargin: 'Gross Margin',
+    purchases: 'Purchases', wasteValue: 'Waste (value)', byMonth: 'By month', byDish: 'By dish', noSalesPeriod: 'No sales in this period.',
+    costNote: 'Cost is calculated from recipes using current ingredient prices. Purchases only include receipts with a recorded price.',
     settings: 'Settings',
     storeLimit: 'Store limit', storeLimitReached: 'You have reached the store limit of your plan. Contact us to add a store.',
     unitPrice: 'Unit price', priceAlert: 'Price increase', priceIncreases: 'Price increases (last 30 days)', previousPrice: 'Previous', newPrice: 'New',
