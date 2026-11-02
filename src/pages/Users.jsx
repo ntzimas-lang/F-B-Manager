@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createClient } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { useStores } from '../context/StoreContext'
 import { useAuth } from '../context/AuthContext'
@@ -29,6 +30,37 @@ export default function Users() {
   }
   useEffect(() => { load() }, [])
 
+  const [nEmail, setNEmail] = useState('')
+  const [nPass, setNPass] = useState('')
+  const [nRole, setNRole] = useState('shift_manager')
+  const [nStore, setNStore] = useState('')
+  const [nMsg, setNMsg] = useState('')
+  const [adding, setAdding] = useState(false)
+
+  async function addUser() {
+    setNMsg('')
+    if (!nEmail || nPass.length < 6 || (nRole === 'store_manager' && !nStore)) { setNMsg(t('userFormHint2')); return }
+    setAdding(true)
+    const temp = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false, storageKey: 'tmp-signup' },
+    })
+    const { data, error } = await temp.auth.signUp({ email: nEmail, password: nPass })
+    if (error || !data.user) { setNMsg(error?.message || 'Error'); setAdding(false); return }
+    let err = null
+    for (let i = 0; i < 5; i++) {
+      const r = await supabase.rpc('claim_user', { p_user: data.user.id, p_role: nRole, p_store: nStore || null })
+      err = r.error
+      if (!err) break
+      await new Promise(res => setTimeout(res, 600))
+    }
+    if (err) { setNMsg(err.message); setAdding(false); return }
+    await logActivity('create', 'user', nEmail, nRole)
+    setNMsg(t('userCreated'))
+    setNEmail(''); setNPass(''); setNRole('shift_manager'); setNStore('')
+    setAdding(false)
+    load()
+  }
+
   async function updateField(userRow, field, value) {
     setSavingId(userRow.id)
     const payload = { [field]: value || null }
@@ -49,8 +81,23 @@ export default function Users() {
         <h1>{t('users')}</h1>
       </div>
 
-      <div className="card" style={{ marginBottom: 16, background: 'var(--olive-50)', fontSize: 13 }}>
-        {t('newUserNote')}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <h2 style={{ marginTop: 0 }}>{t('addUser')}</h2>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <input placeholder="Email" value={nEmail} onChange={e => setNEmail(e.target.value)} />
+          <input placeholder={t('password')} value={nPass} onChange={e => setNPass(e.target.value)} />
+          <select value={nRole} onChange={e => setNRole(e.target.value)}>
+            {Object.entries(ROLE_LABELS).map(([val, label]) => <option key={val} value={val}>{label}</option>)}
+          </select>
+          {nRole === 'store_manager' && (
+            <select value={nStore} onChange={e => setNStore(e.target.value)}>
+              <option value="">{t('selectStore')}</option>
+              {stores.map((st) => <option key={st.id} value={st.id}>{st.name}</option>)}
+            </select>
+          )}
+          <button className="btn" onClick={addUser} disabled={adding}>{adding ? t('saving') : t('add')}</button>
+        </div>
+        {nMsg && <p style={{ marginBottom: 0 }}>{nMsg}</p>}
       </div>
 
       <div className="card">
