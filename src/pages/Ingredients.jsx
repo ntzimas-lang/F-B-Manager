@@ -18,6 +18,7 @@ export default function Ingredients() {
   const [historyIng, setHistoryIng] = useState(null)
   const [fCat, setFCat] = useState('')
   const [fSup, setFSup] = useState('')
+  const [q, setQ] = useState('')
 
   async function loadAll() {
     const [i, s] = await Promise.all([
@@ -62,12 +63,14 @@ export default function Ingredients() {
             <option value="">{t('supplier')}: {t('all')}</option>
             {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
+          <input placeholder={t('search')} value={q} onChange={e => setQ(e.target.value)} />
         </div>
         <table>
-          <thead><tr><th>{t('name')}</th><th>{t('category')}</th><th>{t('unit')}</th>{!hideCosts && <th>{t('price')}</th>}<th>{t('supplier')}</th><th></th></tr></thead>
+          <thead><tr><th>{t('code')}</th><th>{t('name')}</th><th>{t('category')}</th><th>{t('unit')}</th>{!hideCosts && <th>{t('price')}</th>}<th>{t('supplier')}</th><th></th></tr></thead>
           <tbody>
-            {ingredients.filter(i => (!fCat || (fCat === '__none' ? !i.category : i.category === fCat)) && (!fSup || i.supplier_id === fSup)).map(ing => (
+            {ingredients.filter(i => (!fCat || (fCat === '__none' ? !i.category : i.category === fCat)) && (!fSup || i.supplier_id === fSup) && (!q || (i.name + ' ' + (i.code || '')).toLowerCase().includes(q.toLowerCase()))).map(ing => (
               <tr key={ing.id}>
+                <td style={{whiteSpace:'nowrap', color:'#6b6b5f'}}>{ing.code || '-'}</td>
                 <td>{ing.name}</td>
                 <td>{ing.category || '-'}</td>
                 <td style={{textTransform:'uppercase'}}>{ing.unit}</td>
@@ -105,6 +108,7 @@ function IngredientFormModal({ suppliers, ingredient, onClose, onSaved }) {
     name: ingredient?.name || '', unit: ingredient?.unit || 'kg',
     current_price: ingredient?.current_price ?? '', supplier_id: ingredient?.supplier_id || '',
     min_stock_alert: ingredient?.min_stock_alert ?? '', category: ingredient?.category || '',
+    code: ingredient?.code || '',
   })
   async function save() {
     if (!form.name) return
@@ -113,12 +117,16 @@ function IngredientFormModal({ suppliers, ingredient, onClose, onSaved }) {
       current_price: Number(form.current_price) || 0,
       min_stock_alert: Number(form.min_stock_alert) || 0,
       supplier_id: form.supplier_id || null, category: form.category || null,
+      code: form.code.trim() || null,
     }
+    if (isEdit && !payload.code) delete payload.code
     if (isEdit) {
-      await supabase.from('ingredients').update(payload).eq('id', ingredient.id)
+      const { error } = await supabase.from('ingredients').update(payload).eq('id', ingredient.id)
+      if (error) { alert(/duplicate|unique/i.test(error.message) ? t('codeExists') : error.message); return }
       await logActivity('update', 'ingredient', form.name)
     } else {
-      await supabase.from('ingredients').insert(payload)
+      const { error } = await supabase.from('ingredients').insert(payload)
+      if (error) { alert(/duplicate|unique/i.test(error.message) ? t('codeExists') : error.message); return }
       await logActivity('create', 'ingredient', form.name)
     }
     onSaved()
@@ -127,6 +135,7 @@ function IngredientFormModal({ suppliers, ingredient, onClose, onSaved }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
         <div style={{display:'flex', justifyContent:'space-between'}}><h2>{isEdit ? `${t('edit')} — ${ingredient.name}` : t('newIngredient')}</h2><button className="icon-btn" onClick={onClose}><X/></button></div>
+        <div className="form-row"><label>{t('code')}</label><input value={form.code} placeholder={t('autoCode')} onChange={e => setForm({...form, code:e.target.value})}/></div>
         <div className="form-row"><label>{t('name')}</label><input value={form.name} onChange={e => setForm({...form, name:e.target.value})}/></div>
         <div className="form-row"><label>{t('category')}</label>
           <select value={form.category} onChange={e => setForm({...form, category:e.target.value})}>

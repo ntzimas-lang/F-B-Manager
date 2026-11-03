@@ -191,13 +191,13 @@ export default function Stocktake() {
   }
 
   async function exportCSV(record) {
-    const rows = [[t('ingredient'), t('category'), t('supplier'), t('rooms'), t('unit'), t('systemQty'), t('realQty'), t('variance'), t('unitPrice'), t('total')]]
-    const roomRows = [[t('rooms'), t('ingredient'), t('unit'), t('realQty'), t('value')]]
+    const rows = [[t('code'), t('ingredient'), t('category'), t('supplier'), t('rooms'), t('unit'), t('systemQty'), t('realQty'), t('variance'), t('unitPrice'), t('total')]]
+    const roomRows = [[t('rooms'), t('code'), t('ingredient'), t('unit'), t('realQty'), t('value')]]
     record.stocktake_items.forEach(it => {
       const ing = ingredients.find(i => i.id === it.ingredient_id)
       const p = Number(ing?.current_price || 0)
-      rows.push([ing?.name || '', ing?.category || '', suppliers.find(x => x.id === ing?.supplier_id)?.name || '', roomNamesOf(it.ingredient_id), ing?.unit || '', Number(it.system_qty), Number(it.counted_qty), Number(it.variance), p, Math.round(Number(it.variance) * p * 100) / 100])
-      rooms.forEach(r => { if (roomItems.some(x => x.room_id === r.id && x.ingredient_id === it.ingredient_id)) roomRows.push([r.name, ing?.name || '', ing?.unit || '', Number(it.counted_qty), Math.round(Number(it.counted_qty) * p * 100) / 100]) })
+      rows.push([ing?.code || '', ing?.name || '', ing?.category || '', suppliers.find(x => x.id === ing?.supplier_id)?.name || '', roomNamesOf(it.ingredient_id), ing?.unit || '', Number(it.system_qty), Number(it.counted_qty), Number(it.variance), p, Math.round(Number(it.variance) * p * 100) / 100])
+      rooms.forEach(r => { if (roomItems.some(x => x.room_id === r.id && x.ingredient_id === it.ingredient_id)) roomRows.push([r.name, ing?.code || '', ing?.name || '', ing?.unit || '', Number(it.counted_qty), Math.round(Number(it.counted_qty) * p * 100) / 100]) })
     })
     const sheets = [{ name: record.month, rows }]
     if (rooms.length) sheets.push({ name: t('rooms'), rows: roomRows })
@@ -208,7 +208,7 @@ export default function Stocktake() {
   const shownIngredients = ingredients
     .filter(i => (!fCat || (fCat === '__none' ? !i.category : i.category === fCat)) && (!fSup || i.supplier_id === fSup)
       && (room === 'all' || editRoom || inRoom(i.id))
-      && (!search || i.name.toLowerCase().includes(search.toLowerCase())))
+      && (!search || (i.name + ' ' + (i.code || '')).toLowerCase().includes(search.toLowerCase())))
     .sort((a, b) => sortBy === 'room' ? (roomPos(a.id) - roomPos(b.id) || a.name.localeCompare(b.name))
       : sortBy === 'name' ? a.name.localeCompare(b.name)
       : (a.category || '~').localeCompare(b.category || '~') || a.name.localeCompare(b.name))
@@ -272,7 +272,7 @@ export default function Stocktake() {
         {loading ? <p>{t('loading')}</p> : (
           <>
             <table>
-              <thead><tr>{editRoom && <th></th>}<th>{t('ingredient')}</th><th>{t('category')}</th><th>{t('supplier')}</th><th>{t('systemQty')}</th><th>{t('realQty')}</th><th>{t('variance')}</th></tr></thead>
+              <thead><tr>{editRoom && <th></th>}<th>{t('code')}</th><th>{t('ingredient')}</th><th>{t('category')}</th><th>{t('supplier')}</th><th>{t('systemQty')}</th><th>{t('realQty')}</th><th>{t('variance')}</th></tr></thead>
               <tbody>
                 {shownIngredients.map(ing => {
                   const sys = systemQty(ing.id)
@@ -283,6 +283,7 @@ export default function Stocktake() {
                   return (
                     <tr key={ing.id} style={highlight === ing.id ? { background: 'var(--olive-50, #f4f5ec)' } : undefined}>
                       {editRoom && <td><input type="checkbox" checked={inRoom(ing.id)} onChange={() => toggleRoomItem(ing.id)} /></td>}
+                      <td style={{color:'#6b6b5f'}}>{ing.code || '-'}</td>
                       <td>{ing.name}</td>
                       <td>{ing.category || '-'}</td>
                       <td>{suppliers.find(x => x.id === ing.supplier_id)?.name || '-'}</td>
