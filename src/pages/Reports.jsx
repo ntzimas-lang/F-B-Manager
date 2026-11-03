@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useStores } from '../context/StoreContext'
 import { useLanguage } from '../context/LanguageContext'
 import { ChevronLeft, ChevronRight, Download } from 'lucide-react'
+import { exportXlsx } from '../lib/exportExcel'
 
 const pad = (n) => String(n).padStart(2, '0')
 const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
@@ -52,7 +53,7 @@ export default function Reports() {
   async function fetchPeriod(r, recipeCost) {
     const storeFilter = selectedStoreId !== 'all' ? selectedStoreId : null
     let salesQ = supabase.from('sales').select('date, sale_items(recipe_id, quantity, unit_price)').gte('date', r.start).lte('date', r.end)
-    let recQ = supabase.from('goods_receipt_items').select('quantity, unit_price, goods_receipts!inner(receipt_date, store_id)')
+    let recQ = supabase.from('goods_receipt_items').select('quantity, unit_price, goods_receipts!inner(receipt_date, store_id, supplier_id)')
       .not('unit_price', 'is', null).gte('goods_receipts.receipt_date', r.start).lte('goods_receipts.receipt_date', r.end)
     let wasteQ = supabase.from('stock_movements').select('ingredient_id, quantity').eq('movement_type', 'waste')
       .gte('created_at', r.start + 'T00:00:00').lt('created_at', addDays(r.end, 1) + 'T00:00:00')
@@ -74,13 +75,14 @@ export default function Reports() {
         supabase.from('recipe_ingredients').select('*'),
         supabase.from('ingredients').select('id, current_price'),
       ])
+      const { data: sups } = await supabase.from('suppliers').select('id, name')
       const priceMap = Object.fromEntries((ings || []).map(i => [i.id, Number(i.current_price) || 0]))
       const recipeCost = {}
       for (const r of recipes || []) {
         recipeCost[r.id] = (links || []).filter(l => l.recipe_id === r.id).reduce((s, l) => s + (priceMap[l.ingredient_id] || 0) * Number(l.quantity), 0)
       }
       const [cur, prev] = await Promise.all([fetchPeriod(range, recipeCost), fetchPeriod(prevRange, recipeCost)])
-      setData({ cur, prev, recipes: recipes || [], priceMap })
+      setData({ cur, prev, recipes: recipes || [], priceMap, suppliers: sups || [] })
       setLoading(false)
     }
     load()
@@ -101,8 +103,14 @@ export default function Reports() {
       }
     }
     const purchases = p.recs.reduce((a, r) => a + Number(r.quantity) * Number(r.unit_price), 0)
+    const bySupplier = {}
+    for (const r of p.recs) {
+      const k = r.goods_receipts?.supplier_id || 'none'
+      const b = (bySupplier[k] ||= { total: 0, lines: 0 })
+      b.total += Number(r.quantity) * Number(r.unit_price); b.lines += 1
+    }
     const waste = p.waste.reduce((a, w) => a + Math.abs(Number(w.quantity)) * (data?.priceMap[w.ingredient_id] || 0), 0)
-    return { revenue, cost, margin: revenue - cost, foodCostPct: revenue > 0 ? (cost / revenue) * 100 : 0, portions, purchases, waste, byDish, byMonth }
+    return { revenue, cost, margin: revenue - cost, foodCostPct: revenue > 0 ? (cost / revenue) * 100 : 0, portions, purchases, waste, byDish, byMonth, bySupplier }
   }
 
   const cur = useMemo(() => summarize(data?.cur), [data])
@@ -122,16 +130,24 @@ export default function Reports() {
     return <span style={{ fontSize: 12, fontWeight: 600, color: good ? 'var(--ok)' : 'var(--danger)' }}>{pct > 0 ? '▲' : '▼'} {Math.abs(pct).toFixed(0)}% {t('vsPrev')}</span>
   }
 
-  function exportCSV() {
+  async function exportExcel() {
     if (!cur) return
-    const rows = [[t('dishes'), t('portions'), t('revenue'), t('cost'), t('grossMargin')]]
-    for (const [id, d] of Object.entries(cur.byDish)) {
-      rows.push([data.recipes.find(r => r.id === id)?.name || '', d.portions, d.revenue.toFixed(2), d.cost.toFixed(2), (d.revenue - d.cost).toFixed(2)])
-    }
-    const csv = '﻿' + rows.map(r => r.join(';')).join('\n')
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }))
-    a.download = `results-${range.start}_${range.end}.csv`; a.click()
+    const r2 = (n) => Math.round(n * 100) / 100
+    const summary = [
+      [t('results'), `${range.start} → ${range.end}`],
+      [t('revenue'), r2(cur.revenue)], [t('foodCostAmount'), r2(cur.cost)], [t('grossMargin'), r2(cur.margin)],
+      [t('foodCostPct'), r2(cur.foodCostPct)], [t('portions'), cur.portions], [t('purchases'), r2(cur.purchases)], [t('wasteValue'), r2(cur.waste)],
+    ]
+    const months = [[t('monthLabel'), t('revenue'), t('foodCostAmount'), t('grossMargin'), t('foodCostPct')],
+      ...Object.entries(cur.byMonth).sort(([a], [b]) => a.localeCompare(b)).map(([m, v]) => [m, r2(v.revenue), r2(v.cost), r2(v.revenue - v.cost), v.revenue > 0 ? r2((v.cost / v.revenue) * 100) : 0])]
+    const dishes = [[t('dishes'), t('portions'), t('revenue'), t('foodCostAmount'), t('grossMargin')],
+      ...Object.entries(cur.byDish).sort(([, a], [, b]) => b.revenue - a.revenue).map(([id, d]) => [data.recipes.find(r => r.id === id)?.name || '', d.portions, r2(d.revenue), r2(d.cost), r2(d.revenue - d.cost)])]
+    const suppliers = [[t('supplier'), t('invoicesCount'), t('purchases')],
+      ...Object.entries(cur.bySupplier).sort(([, a], [, b]) => b.total - a.total).map(([id, v]) => [data.suppliers.find(x => x.id === id)?.name || '-', v.lines, r2(v.total)])]
+    await exportXlsx(`results-${range.start}_${range.end}`, [
+      { name: t('summary'), rows: [[t('summary'), ''], ...summary] },
+      { name: t('byMonth'), rows: months }, { name: t('byDish'), rows: dishes }, { name: t('purchasesBySupplier'), rows: suppliers },
+    ])
   }
 
   const tabBtn = (k, text) => (
@@ -143,7 +159,7 @@ export default function Reports() {
     <div>
       <div className="topbar" style={{ marginBottom: 16 }}>
         <h1>{t('results')}</h1>
-        <button className="btn btn-outline" onClick={exportCSV}><Download size={16} /> {t('exportCsv')}</button>
+        <button className="btn btn-outline export-btn" onClick={exportExcel}><Download size={16} /> {t('exportExcel')}</button>
       </div>
 
       <div className="card" style={{ marginBottom: 16, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>

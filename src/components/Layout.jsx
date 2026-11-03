@@ -7,12 +7,12 @@ import { useLanguage } from '../context/LanguageContext'
 
 export default function Layout() {
   const { stores, selectedStoreId, selectStore, loading } = useStores()
-  const { profile, session, signOut, hasFeature, isPlatformAdmin } = useAuth()
+  const { profile, session, signOut, hasFeature, isPlatformAdmin, readOnly, role, isStoreScoped } = useAuth()
   const { lang, chooseLang, t } = useLanguage()
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-role={role} data-readonly={readOnly ? '1' : '0'}>
       <div className={'sidebar-backdrop' + (menuOpen ? ' open' : '')} onClick={() => setMenuOpen(false)} />
       <aside className={'sidebar' + (menuOpen ? ' open' : '')} onClick={(e) => { if (e.target.closest('a')) setMenuOpen(false) }}>
         <div className="sidebar-logo">F&B <span>Manager</span></div>
@@ -79,9 +79,11 @@ export default function Layout() {
             <History size={18} /> {t('activity')}
           </NavLink>
         )}
-        <NavLink to="/admin" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
-          <Settings size={18} /> {t('settings')}
-        </NavLink>
+        {(isPlatformAdmin || ['super_user', 'owner', 'store_manager'].includes(role)) && (
+          <NavLink to="/admin" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
+            <Settings size={18} /> {t('settings')}
+          </NavLink>
+        )}
 
         <div style={{ padding: '16px 20px 4px' }}>
           <div style={{ display: 'flex', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 6, overflow: 'hidden' }}>
@@ -118,7 +120,7 @@ export default function Layout() {
         <div className="topbar">
           <button className="menu-btn" onClick={() => setMenuOpen(true)}><Menu size={20} /></button>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            {!loading && (
+            {!loading && !isStoreScoped && (
               <select
                 className="store-select"
                 value={selectedStoreId}

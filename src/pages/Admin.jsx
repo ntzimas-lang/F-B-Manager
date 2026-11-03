@@ -11,7 +11,7 @@ export default function Admin() {
   const [params, setParams] = useSearchParams()
 
   const tabs = [
-    hasFeature('stores') && { key: 'stores', label: t('stores'), el: <Stores /> },
+    (hasFeature('stores') && ['super_user', 'owner', 'store_manager'].includes(profile?.role) || isPlatformAdmin) && { key: 'stores', label: t('stores'), el: <Stores /> },
     (['super_user', 'owner'].includes(profile?.role) || isPlatformAdmin) && { key: 'users', label: t('users'), el: <Users /> },
     isPlatformAdmin && { key: 'companies', label: t('companies'), el: <Companies /> },
   ].filter(Boolean)

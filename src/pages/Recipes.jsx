@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { logActivity } from '../lib/activity'
 import { useLanguage } from '../context/LanguageContext'
+import { useAuth } from '../context/AuthContext'
 import { Plus, Trash2, X } from 'lucide-react'
 
 export default function Recipes() {
@@ -39,7 +40,7 @@ export default function Recipes() {
       <div className="card">
         <div style={{display:'flex', justifyContent:'space-between', marginBottom:12}}>
           <h2 style={{margin:0}}>{t('dishes')} ({recipes.length})</h2>
-          <button className="btn" onClick={() => setShowRecipeForm(true)}><Plus size={16}/> {t('newDish')}</button>
+          <button className="btn write-master" onClick={() => setShowRecipeForm(true)}><Plus size={16}/> {t('newDish')}</button>
         </div>
         <table>
           <thead><tr><th>{t('name')}</th><th>{t('category')}</th><th>{t('sellingPrice')}</th><th>{t('portionSize')}</th><th></th></tr></thead>
@@ -51,7 +52,7 @@ export default function Recipes() {
                 <td>{Number(r.selling_price).toFixed(2)} €</td>
                 <td>{r.portion_size}</td>
                 <td onClick={e => e.stopPropagation()}>
-                  <button className="icon-btn danger" onClick={() => deleteRecipe(r.id)}><Trash2 size={16}/></button>
+                  <button className="icon-btn danger write-master" onClick={() => deleteRecipe(r.id)}><Trash2 size={16}/></button>
                 </td>
               </tr>
             ))}
@@ -95,6 +96,7 @@ function RecipeFormModal({ onClose, onSaved }) {
 
 function RecipeIngredientsModal({ recipe, allIngredients, onClose }) {
   const { t } = useLanguage()
+  const { hideCosts } = useAuth()
   const [links, setLinks] = useState([])
   const [addIngId, setAddIngId] = useState('')
   const [addQty, setAddQty] = useState('')
@@ -128,7 +130,7 @@ function RecipeIngredientsModal({ recipe, allIngredients, onClose }) {
         <div style={{display:'flex', justifyContent:'space-between'}}><h2>{recipe.name} — {t('composition')}</h2><button className="icon-btn" onClick={onClose}><X/></button></div>
 
         <table style={{marginBottom:12}}>
-          <thead><tr><th>{t('ingredient')}</th><th>{t('quantity')}</th><th>{t('cost')}</th><th></th></tr></thead>
+          <thead><tr><th>{t('ingredient')}</th><th>{t('quantity')}</th>{!hideCosts && <th>{t('cost')}</th>}<th></th></tr></thead>
           <tbody>
             {links.map(l => {
               const ing = allIngredients.find(i => i.id === l.ingredient_id)
@@ -136,24 +138,24 @@ function RecipeIngredientsModal({ recipe, allIngredients, onClose }) {
                 <tr key={l.id}>
                   <td>{ing?.name || '-'}</td>
                   <td>{l.quantity} {ing?.unit}</td>
-                  <td>{ing ? (ing.current_price * l.quantity).toFixed(3) : '-'} €</td>
-                  <td><button className="icon-btn danger" onClick={() => removeLink(l.id)}><Trash2 size={14}/></button></td>
+                  {!hideCosts && <td>{ing ? (ing.current_price * l.quantity).toFixed(3) : '-'} €</td>}
+                  <td><button className="icon-btn danger write-master" onClick={() => removeLink(l.id)}><Trash2 size={14}/></button></td>
                 </tr>
               )
             })}
           </tbody>
         </table>
 
-        <div style={{display:'flex', gap:8, marginBottom:16}}>
+        <div className="write-master" style={{display:'flex', gap:8, marginBottom:16}}>
           <select value={addIngId} onChange={e => setAddIngId(e.target.value)} style={{flex:1}}>
             <option value="">{t('selectOption')}</option>
             {allIngredients.map(i => <option key={i.id} value={i.id}>{i.name} ({i.unit})</option>)}
           </select>
           <input type="number" step="0.001" placeholder={t('quantity')} value={addQty} onChange={e => setAddQty(e.target.value)} style={{width:100}}/>
-          <button className="btn" onClick={addLink}><Plus size={16}/></button>
+          <button className="btn write-master" onClick={addLink}><Plus size={16}/></button>
         </div>
 
-        <div className="card" style={{background:'var(--olive-50)'}}>
+        {!hideCosts && <div className="card" style={{background:'var(--olive-50)'}}>
           <div style={{display:'flex', justifyContent:'space-between'}}>
             <div><div className="stat-label">{t('cost')}</div><div className="stat-value">{totalCost.toFixed(2)} €</div></div>
             <div><div className="stat-label">{t('sellingPrice')}</div><div className="stat-value">{Number(recipe.selling_price).toFixed(2)} €</div></div>
@@ -163,7 +165,7 @@ function RecipeIngredientsModal({ recipe, allIngredients, onClose }) {
               </div>
             </div>
           </div>
-        </div>
+        </div>}
       </div>
     </div>
   )

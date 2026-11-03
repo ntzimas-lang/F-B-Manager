@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { logActivity } from '../lib/activity'
 import { useStores } from '../context/StoreContext'
 import { useLanguage } from '../context/LanguageContext'
+import { useAuth } from '../context/AuthContext'
 import { Plus, X, Trash2 } from 'lucide-react'
 
 const STATUS_BADGE = { draft: 'badge-warn', sent: 'badge-warn', received: 'badge-ok', cancelled: 'badge-danger' }
@@ -56,7 +57,7 @@ export default function Orders() {
         <div className="card">
           <div style={{display:'flex', justifyContent:'space-between', marginBottom:12}}>
             <h2 style={{margin:0}}>{t('orders')} ({orders.length})</h2>
-            <button className="btn" onClick={() => setShowOrderForm(true)}><Plus size={16}/> {t('newOrder')}</button>
+            <button className="btn write-btn" onClick={() => setShowOrderForm(true)}><Plus size={16}/> {t('newOrder')}</button>
           </div>
           <table>
             <thead><tr><th>{t('date')}</th><th>{t('store')}</th><th>{t('supplier')}</th><th>{t('status')}</th><th></th></tr></thead>
@@ -80,7 +81,7 @@ export default function Orders() {
         <div className="card">
           <div style={{display:'flex', justifyContent:'space-between', marginBottom:12}}>
             <h2 style={{margin:0}}>{t('supplier')} ({suppliers.length})</h2>
-            <button className="btn" onClick={() => setShowSupplierForm(true)}><Plus size={16}/> {t('newSupplier')}</button>
+            <button className="btn write-master" onClick={() => setShowSupplierForm(true)}><Plus size={16}/> {t('newSupplier')}</button>
           </div>
           <table>
             <thead><tr><th>{t('name')}</th><th>{t('contact')}</th><th>{t('phone')}</th><th>Email</th><th></th></tr></thead>
@@ -88,7 +89,7 @@ export default function Orders() {
               {suppliers.map(s => (
                 <tr key={s.id}>
                   <td>{s.name}</td><td>{s.contact_name}</td><td>{s.phone}</td><td>{s.email}</td>
-                  <td><button className="icon-btn danger" onClick={() => deleteSupplier(s.id)}><Trash2 size={16}/></button></td>
+                  <td><button className="icon-btn danger write-master" onClick={() => deleteSupplier(s.id)}><Trash2 size={16}/></button></td>
                 </tr>
               ))}
               {suppliers.length === 0 && <tr><td colSpan={5}>{t('noSuppliers')}</td></tr>}
@@ -169,6 +170,7 @@ function OrderFormModal({ stores, suppliers, onClose, onSaved }) {
 
 function OrderDetailModal({ order, ingredients, onClose, onChanged }) {
   const { t } = useLanguage()
+  const { hideCosts, readOnly } = useAuth()
   const [items, setItems] = useState([])
   const [status, setStatus] = useState(order.status)
   const [addIng, setAddIng] = useState('')
@@ -224,7 +226,7 @@ function OrderDetailModal({ order, ingredients, onClose, onChanged }) {
         </div>
 
         <div className="form-row"><label>{t('status')}</label>
-          <select value={status} onChange={e => updateStatus(e.target.value)}>
+          <select value={status} disabled={readOnly || (hideCosts && status !== 'draft')} onChange={e => updateStatus(e.target.value)}>
             <option value="draft">{t('draft')}</option>
             <option value="sent">{t('sent')}</option>
             <option value="received">{t('received')}</option>
@@ -233,7 +235,7 @@ function OrderDetailModal({ order, ingredients, onClose, onChanged }) {
         </div>
 
         <table style={{marginBottom:12}}>
-          <thead><tr><th>{t('ingredient')}</th><th>{t('quantity')}</th><th>{t('price')}</th><th>{t('total')}</th><th></th></tr></thead>
+          <thead><tr><th>{t('ingredient')}</th><th>{t('quantity')}</th>{!hideCosts && <><th>{t('price')}</th><th>{t('total')}</th></>}<th></th></tr></thead>
           <tbody>
             {items.map(it => {
               const ing = ingredients.find(i => i.id === it.ingredient_id)
@@ -241,26 +243,26 @@ function OrderDetailModal({ order, ingredients, onClose, onChanged }) {
                 <tr key={it.id}>
                   <td>{ing?.name}</td>
                   <td>{it.quantity} {ing?.unit}</td>
-                  <td>{Number(it.unit_price).toFixed(3)} €</td>
-                  <td>{(it.quantity * it.unit_price).toFixed(2)} €</td>
-                  <td><button className="icon-btn danger" onClick={() => removeItem(it.id)}><Trash2 size={14}/></button></td>
+                  {!hideCosts && <><td>{Number(it.unit_price).toFixed(3)} €</td>
+                  <td>{(it.quantity * it.unit_price).toFixed(2)} €</td></>}
+                  <td><button className="icon-btn danger write-btn" onClick={() => removeItem(it.id)}><Trash2 size={14}/></button></td>
                 </tr>
               )
             })}
           </tbody>
         </table>
 
-        <div style={{display:'flex', gap:8, marginBottom:16}}>
+        <div className="write-btn" style={{display:'flex', gap:8, marginBottom:16}}>
           <select value={addIng} onChange={e => setAddIng(e.target.value)} style={{flex:1}}>
             <option value="">{t('selectOption')}</option>
             {ingredients.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
           </select>
           <input type="number" step="0.01" placeholder={t('quantity')} value={addQty} onChange={e => setAddQty(e.target.value)} style={{width:100}}/>
-          <button className="btn" onClick={addItem}><Plus size={16}/></button>
+          <button className="btn write-btn" onClick={addItem}><Plus size={16}/></button>
         </div>
 
-        <div className="stat-label">{t('orderTotal')}</div>
-        <div className="stat-value">{total.toFixed(2)} €</div>
+        {!hideCosts && <><div className="stat-label">{t('orderTotal')}</div>
+        <div className="stat-value">{total.toFixed(2)} €</div></>}
       </div>
     </div>
   )

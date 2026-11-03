@@ -1,12 +1,16 @@
+import { Download } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useStores } from '../context/StoreContext'
 import { useLanguage } from '../context/LanguageContext'
 import { logActivity } from '../lib/activity'
+import { useAuth } from '../context/AuthContext'
 
+import { exportXlsx } from '../lib/exportExcel'
 export default function Sales() {
   const { stores, selectedStoreId } = useStores()
   const { t } = useLanguage()
+  const { readOnly } = useAuth()
   const activeStoreId = selectedStoreId !== 'all' ? selectedStoreId : (stores[0]?.id || '')
   const store = stores.find(s => s.id === activeStoreId)
 
@@ -43,6 +47,15 @@ export default function Sales() {
     setLoading(false)
   }
   useEffect(() => { load() }, [activeStoreId, date])
+
+  async function exportSales() {
+    const rows = [[t('date'), t('dishes'), t('portions'), t('unitPrice'), t('totalRevenue')]]
+    pastSales.forEach(s => (s.sale_items || []).forEach(it => {
+      const q = Number(it.quantity), p = Number(it.unit_price)
+      rows.push([s.date, recipes.find(r => r.id === it.recipe_id)?.name || '', q, p, Math.round(q * p * 100) / 100])
+    }))
+    await exportXlsx(`sales-${new Date().toISOString().slice(0, 10)}`, [{ name: t('salesSheet'), rows }])
+  }
 
   async function saveSales() {
     if (!activeStoreId) return
@@ -122,7 +135,10 @@ export default function Sales() {
     <div>
       <div className="topbar" style={{ marginBottom: 16 }}>
         <h1>{t('sales')}</h1>
-        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        <div style={{display:'flex', gap:8, alignItems:'center'}}>
+          <button className="btn btn-outline export-btn" onClick={exportSales}><Download size={16}/> {t('exportExcel')}</button>
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        </div>
       </div>
 
       {selectedStoreId === 'all' && (
@@ -151,7 +167,7 @@ export default function Sales() {
                       <td>{Number(r.selling_price).toFixed(2)} €</td>
                       <td>
                         <input
-                          type="number" min="0" step="1" style={{ width: 90 }}
+                          type="number" min="0" step="1" style={{ width: 90 }} disabled={readOnly}
                           value={quantities[r.id] ?? ''}
                           onChange={(e) => setQuantities({ ...quantities, [r.id]: e.target.value })}
                         />
@@ -170,7 +186,7 @@ export default function Sales() {
                   <div className="stat-label">{t('totalRevenue')}</div>
                   <div className="stat-value">{totalRevenue.toFixed(2)} €</div>
                 </div>
-                <button className="btn" onClick={saveSales} disabled={saving}>
+                <button className="btn write-btn" onClick={saveSales} disabled={saving}>
                   {saving ? t('saving') : existingSale ? t('updateSales') : t('recordSales')}
                 </button>
               </div>

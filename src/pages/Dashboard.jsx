@@ -14,7 +14,7 @@ const OLIVE_RGB = [61, 74, 40] // #3d4a28
 export default function Dashboard() {
   const { stores } = useStores()
   const { t } = useLanguage()
-  const { hasFeature } = useAuth()
+  const { hasFeature, hideCosts } = useAuth()
   const [monthRevenue, setMonthRevenue] = useState(0)
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({
@@ -136,7 +136,7 @@ export default function Dashboard() {
         hasFeature('staff') && ['Υπάλληλοι', String(stats.employees)],
         hasFeature('costing') && ['Μέσο Food Cost %', `${stats.avgCostPct.toFixed(1)}%`],
         hasFeature('sales') && ['Έσοδα Μήνα', `${monthRevenue.toFixed(2)} €`],
-        hasFeature('inventory') && ['Αξία Αποθέματος', `${stats.inventoryValue.toFixed(2)} €`],
+        hasFeature('inventory') && !hideCosts && ['Αξία Αποθέματος', `${stats.inventoryValue.toFixed(2)} €`],
         hasFeature('inventory') && ['Χαμηλό Απόθεμα', String(stats.lowStock)],
         hasFeature('orders') && ['Εκκρεμείς Παραγγελίες', String(stats.pendingOrders)],
       ].filter(Boolean),
@@ -203,7 +203,7 @@ export default function Dashboard() {
         <div className="card"><div className="stat-label">{t('totalStores')}</div><div className="stat-value">{stores.length}</div></div>
         {hasFeature('sales') && <div className="card"><div className="stat-label">{t('monthRevenue')}</div><div className="stat-value">{monthRevenue.toFixed(0)} €</div></div>}
         {hasFeature('costing') && <div className="card"><div className="stat-label">{t('avgFoodCost')}</div><div className="stat-value">{stats.avgCostPct.toFixed(1)}%</div></div>}
-        {hasFeature('inventory') && <div className="card"><div className="stat-label">{t('inventoryValue')}</div><div className="stat-value">{stats.inventoryValue.toFixed(0)} €</div></div>}
+        {hasFeature('inventory') && !hideCosts && <div className="card"><div className="stat-label">{t('inventoryValue')}</div><div className="stat-value">{stats.inventoryValue.toFixed(0)} €</div></div>}
         {hasFeature('inventory') && (
           <div className="card">
             <div className="stat-label">{t('lowStock')}</div>
@@ -275,12 +275,12 @@ export default function Dashboard() {
         <h2 style={{ marginTop: 0 }}>{t('storeSummary')}</h2>
         {loading ? <p>{t('loading')}</p> : storeSummary.length === 0 ? <p>{t('noStores')}</p> : (
           <table>
-            <thead><tr><th>{t('store')}</th>{hasFeature('inventory') && <><th>{t('inventoryValue')}</th><th>{t('lowStock')}</th></>}{hasFeature('orders') && <th>{t('pendingOrders')}</th>}</tr></thead>
+            <thead><tr><th>{t('store')}</th>{hasFeature('inventory') && <>{!hideCosts && <th>{t('inventoryValue')}</th>}<th>{t('lowStock')}</th></>}{hasFeature('orders') && <th>{t('pendingOrders')}</th>}</tr></thead>
             <tbody>
               {storeSummary.map((s) => (
                 <tr key={s.name}>
                   <td>{s.name}</td>
-                  {hasFeature('inventory') && <><td>{s.value.toFixed(2)} €</td>
+                  {hasFeature('inventory') && <>{!hideCosts && <td>{s.value.toFixed(2)} €</td>}
                   <td>{s.lowStock > 0 ? <span className="badge badge-danger">{s.lowStock}</span> : <span className="badge badge-ok">0</span>}</td></>}
                   {hasFeature('orders') && <td>{s.pending > 0 ? <span className="badge badge-warn">{s.pending}</span> : <span className="badge badge-ok">0</span>}</td>}
                 </tr>

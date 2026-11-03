@@ -32,6 +32,7 @@ export const translations = {
     purchases: 'Αγορές', wasteValue: 'Φύρα (αξία)', byMonth: 'Ανά μήνα', byDish: 'Ανά πιάτο', noSalesPeriod: 'Δεν υπάρχουν πωλήσεις αυτή την περίοδο.',
     costNote: 'Το κόστος υπολογίζεται από τις συνταγές με τις τρέχουσες τιμές των πρώτων υλών. Οι αγορές αφορούν παραλαβές με καταχωρημένη τιμή.',
     monthRevenue: 'Έσοδα Μήνα',
+    exportExcel: 'Excel', summary: 'Σύνοψη', purchasesBySupplier: 'Αγορές ανά προμηθευτή', invoicesCount: 'Παραλαβές', stockSheet: 'Απόθεμα', receiptsSheet: 'Παραλαβές', salesSheet: 'Πωλήσεις',
     // Login
     login: 'Σύνδεση', wrongCredentials: 'Λάθος email ή κωδικός.',
     // Dashboard
@@ -105,6 +106,7 @@ export const translations = {
     noUsers: 'Δεν υπάρχουν χρήστες ακόμα.',
   },
   en: {
+    exportExcel: 'Excel', summary: 'Summary', purchasesBySupplier: 'Purchases by supplier', invoicesCount: 'Receipts', stockSheet: 'Stock', receiptsSheet: 'Receipts', salesSheet: 'Sales',
     monthRevenue: 'Revenue This Month',
     results: 'Results', month: 'Month', quarter: 'Quarter', year: 'Year', season: 'Season', vsPrev: 'vs prev.', previousPeriod: 'Previous period',
     allStoresTotal: 'Total for all stores. Pick a store above for a per-store breakdown.', foodCostAmount: 'Ingredient Cost', grossMargin: 'Gross Margin',

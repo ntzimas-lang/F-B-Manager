@@ -221,3 +221,8 @@ input, select {
   .modal { padding: 16px; }
   .stat-value { font-size: 22px; }
 }
+
+/* Δικαιώματα ανά ρόλο */
+[data-readonly="1"] .write-btn, [data-readonly="1"] .write-master { display: none !important; }
+[data-role="shift_manager"] .write-master, [data-role="shift_manager"] .export-btn { display: none !important; }
+fieldset.ro { border: 0; padding: 0; margin: 0; min-width: 0; }

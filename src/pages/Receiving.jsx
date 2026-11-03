@@ -4,12 +4,15 @@ import { supabase } from '../lib/supabase'
 import { logActivity } from '../lib/activity'
 import { useStores } from '../context/StoreContext'
 import { useLanguage } from '../context/LanguageContext'
-import { ScanLine, Plus, Trash2, X } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
+import { ScanLine, Plus, Trash2, X, Download } from 'lucide-react'
+import { exportXlsx } from '../lib/exportExcel'
 import { PRICE_ALERT_PCT } from '../lib/prices'
 
 export default function Receiving() {
   const { stores, selectedStoreId } = useStores()
   const { t } = useLanguage()
+  const { hideCosts, readOnly } = useAuth()
   const activeStoreId = selectedStoreId !== 'all' ? selectedStoreId : (stores[0]?.id || '')
   const store = stores.find(s => s.id === activeStoreId)
 
@@ -42,6 +45,16 @@ export default function Receiving() {
     }
   }
   useEffect(() => { load() }, [activeStoreId])
+
+  async function exportReceipts() {
+    const rows = [[t('date'), t('invoiceNumber'), t('supplier'), t('ingredient'), t('quantity'), t('unit'), t('unitPrice'), t('total')]]
+    history.forEach(r => (r.goods_receipt_items || []).forEach(it => {
+      const ing = ingredients.find(i => i.id === it.ingredient_id)
+      const q = Number(it.quantity), p = Number(it.unit_price || 0)
+      rows.push([r.receipt_date, r.invoice_number || '', suppliers.find(s => s.id === r.supplier_id)?.name || '', ing?.name || '', q, ing?.unit || '', p, Math.round(q * p * 100) / 100])
+    }))
+    await exportXlsx(`receipts-${new Date().toISOString().slice(0, 10)}`, [{ name: t('receiptsSheet'), rows }])
+  }
 
   // έλεγχος διπλοτύπου
   useEffect(() => {
@@ -162,7 +175,7 @@ export default function Receiving() {
         <div className="card" style={{ marginBottom: 16, background: 'var(--olive-50)' }}>{t('pickStoreNotice')}</div>
       )}
 
-      <div className="card">
+      <div className="card write-btn">
         <h2 style={{ marginTop: 0 }}>{t('newReceipt')} — {store?.name}</h2>
 
         <div className="form-row">
@@ -170,7 +183,7 @@ export default function Receiving() {
           <div style={{ display: 'flex', gap: 8 }}>
             <input style={{ flex: 1 }} value={invoiceRef} onChange={e => setInvoiceRef(e.target.value)} placeholder={t('invoiceQrHint')} />
             {!scanning
-              ? <button className="btn" type="button" onClick={startScan}><ScanLine size={16} /> {t('scan')}</button>
+              ? <button className="btn write-btn" type="button" onClick={startScan}><ScanLine size={16} /> {t('scan')}</button>
               : <button className="btn btn-outline" type="button" onClick={stopScan}><X size={16} /> {t('cancel')}</button>}
           </div>
           {scanError && <div style={{ color: 'var(--danger)', marginTop: 6 }}>{scanError}</div>}
@@ -188,7 +201,7 @@ export default function Receiving() {
         <div className="form-row"><label>{t('date')}</label><input type="date" value={date} onChange={e => setDate(e.target.value)} /></div>
 
         <table>
-          <thead><tr><th>{t('ingredient')}</th><th>{t('quantity')}</th><th>{t('unitPrice')} (€)</th><th></th></tr></thead>
+          <thead><tr><th>{t('ingredient')}</th><th>{t('quantity')}</th>{!hideCosts && <th>{t('unitPrice')} (€)</th>}<th></th></tr></thead>
           <tbody>
             {lines.map((l, i) => {
               const ing = ingredients.find(x => x.id === l.ingredient_id)
@@ -201,7 +214,7 @@ export default function Receiving() {
                     </select>
                   </td>
                   <td><input type="number" step="0.01" min="0" style={{ width: 100 }} value={l.quantity} onChange={e => setLine(i, { quantity: e.target.value })} /> {ing?.unit}</td>
-                  <td>
+                  {!hideCosts && <td>
                     <input type="number" step="0.001" min="0" style={{ width: 100 }} value={l.unit_price} onChange={e => setLine(i, { unit_price: e.target.value })} />
                     {(() => {
                       const cur = Number(ing?.current_price), np = Number(l.unit_price)
@@ -209,15 +222,15 @@ export default function Receiving() {
                       const pct = ((np - cur) / cur) * 100
                       return Math.abs(pct) >= 1 ? <span style={{ marginLeft: 6, fontSize: 12, fontWeight: 600, color: pct >= PRICE_ALERT_PCT ? 'var(--danger)' : pct > 0 ? 'var(--warn)' : 'var(--ok)' }}>{pct > 0 ? '+' : ''}{pct.toFixed(0)}%</span> : null
                     })()}
-                  </td>
-                  <td><button className="icon-btn danger" onClick={() => setLines(lines.length > 1 ? lines.filter((_, idx) => idx !== i) : lines)}><Trash2 size={16} /></button></td>
+                  </td>}
+                  <td><button className="icon-btn danger write-btn" onClick={() => setLines(lines.length > 1 ? lines.filter((_, idx) => idx !== i) : lines)}><Trash2 size={16} /></button></td>
                 </tr>
               )
             })}
           </tbody>
         </table>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16 }}>
-          <button className="btn btn-outline" onClick={() => setLines([...lines, { ingredient_id: '', quantity: '', unit_price: '' }])}><Plus size={14} /> {t('addLine')}</button>
+          <button className="btn btn-outline write-btn" onClick={() => setLines([...lines, { ingredient_id: '', quantity: '', unit_price: '' }])}><Plus size={14} /> {t('addLine')}</button>
           <button className="btn" onClick={save} disabled={saving || duplicate || !invoiceRef.trim()}>{saving ? t('saving') : t('recordReceipt')}</button>
         </div>
       </div>
@@ -233,7 +246,7 @@ export default function Receiving() {
 
       {history.length > 0 && (
         <div className="card" style={{ marginTop: 20 }}>
-          <h2 style={{ marginTop: 0 }}>{t('receiptHistory')}</h2>
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}><h2 style={{ marginTop: 0 }}>{t('receiptHistory')}</h2><button className="btn btn-outline export-btn" onClick={exportReceipts}><Download size={16}/> {t('exportExcel')}</button></div>
           <table>
             <thead><tr><th>{t('date')}</th><th>{t('invoiceNumber')}</th><th>{t('supplier')}</th><th>{t('products')}</th></tr></thead>
             <tbody>

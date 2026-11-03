@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { PLAN_FEATURES } from '../lib/plans'
+import { PLAN_FEATURES, ROLE_MODULES } from '../lib/plans'
 
 const AuthContext = createContext(null)
 
@@ -49,10 +49,17 @@ export function AuthProvider({ children }) {
   const isPlatformAdmin = !!profile?.is_platform_admin
   const maxStores = profile?.companies?.max_stores ?? 9999
   const custom = profile?.companies?.features
-  const hasFeature = (f) => (Array.isArray(custom) ? [...custom, 'dashboard', 'stores', 'users'] : (PLAN_FEATURES[plan] || PLAN_FEATURES.premium)).includes(f)
+  const role = profile?.role
+  const planAllows = (f) => (Array.isArray(custom) ? [...custom, 'dashboard', 'stores', 'users'] : (PLAN_FEATURES[plan] || PLAN_FEATURES.premium)).includes(f)
+  const roleAllows = (f) => { const m = ROLE_MODULES[role]; return !m || m.includes(f) }
+  const hasFeature = (f) => planAllows(f) && roleAllows(f)
+  const readOnly = role === 'accounting'
+  const hideCosts = role === 'shift_manager'
+  const canExport = role !== 'shift_manager'
+  const isStoreScoped = role === 'store_manager' || role === 'shift_manager'
 
   return (
-    <AuthContext.Provider value={{ session, profile, loading, signIn, signUp, signOut, recovery, setRecovery, maxStores, plan, isPlatformAdmin, hasFeature }}>
+    <AuthContext.Provider value={{ session, profile, loading, signIn, signUp, signOut, recovery, setRecovery, maxStores, plan, isPlatformAdmin, hasFeature, role, readOnly, hideCosts, canExport, isStoreScoped }}>
       {children}
     </AuthContext.Provider>
   )

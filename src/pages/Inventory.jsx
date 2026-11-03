@@ -3,7 +3,8 @@ import { supabase } from '../lib/supabase'
 import { logActivity } from '../lib/activity'
 import { useStores } from '../context/StoreContext'
 import { useLanguage } from '../context/LanguageContext'
-import { Plus, X } from 'lucide-react'
+import { Plus, X, Download } from 'lucide-react'
+import { exportXlsx } from '../lib/exportExcel'
 
 export default function Inventory() {
   const { stores, selectedStoreId } = useStores()
@@ -27,13 +28,25 @@ export default function Inventory() {
   }
   useEffect(() => { load() }, [selectedStoreId])
 
+  async function exportStock() {
+    const rows = [[t('ingredients'), t('store'), t('quantity'), t('unit'), t('unitPrice'), t('total')]]
+    stock.forEach(s => {
+      const q = Number(s.quantity), p = Number(s.ingredients?.current_price || 0)
+      rows.push([s.ingredients?.name || '', s.stores?.name || '', q, s.ingredients?.unit || '', p, Math.round(q * p * 100) / 100])
+    })
+    await exportXlsx(`stock-${new Date().toISOString().slice(0, 10)}`, [{ name: t('stockSheet'), rows }])
+  }
+
   const lowStock = stock.filter(s => s.ingredients && s.quantity <= s.ingredients.min_stock_alert && s.ingredients.min_stock_alert > 0)
 
   return (
     <div>
       <div className="topbar" style={{marginBottom:16}}>
         <h1>{t('inventory')}</h1>
-        <button className="btn" onClick={() => setShowMove(true)}><Plus size={16}/> {t('newMovement')}</button>
+        <div style={{display:'flex', gap:8}}>
+          <button className="btn btn-outline export-btn" onClick={exportStock}><Download size={16}/> {t('exportExcel')}</button>
+          <button className="btn write-btn" onClick={() => setShowMove(true)}><Plus size={16}/> {t('newMovement')}</button>
+        </div>
       </div>
 
       {lowStock.length > 0 && (

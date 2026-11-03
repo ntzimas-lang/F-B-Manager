@@ -9,7 +9,8 @@ import { Plus, Trash2, Pencil, X } from 'lucide-react'
 export default function Stores() {
   const { stores, loading } = useStores()
   const { t } = useLanguage()
-  const { maxStores, isPlatformAdmin } = useAuth()
+  const { maxStores, isPlatformAdmin, role } = useAuth()
+  const canCreate = isPlatformAdmin || role === 'super_user' || role === 'owner'
   const limitReached = !isPlatformAdmin && stores.length >= maxStores
   const [show, setShow] = useState(false)
   const [editing, setEditing] = useState(null) // null = νέο, αντικείμενο = επεξεργασία
@@ -31,7 +32,7 @@ export default function Stores() {
         <h1>{t('stores')}</h1>
         <div style={{display:'flex', gap:12, alignItems:'center'}}>
           {maxStores < 9999 && <span style={{fontSize:13}}>{stores.length} / {maxStores}</span>}
-          <button className="btn" onClick={openNew} disabled={limitReached}><Plus size={16}/> {t('newStore')}</button>
+          {canCreate && <button className="btn write-btn" onClick={openNew} disabled={limitReached}><Plus size={16}/> {t('newStore')}</button>}
         </div>
       </div>
       {limitReached && <div className="card" style={{marginBottom:16, background:'var(--olive-50)'}}>{t('storeLimitReached')}</div>}
@@ -44,8 +45,8 @@ export default function Stores() {
                 <tr key={s.id}>
                   <td>{s.name}</td><td>{s.code}</td><td>{s.address}</td>
                   <td style={{ display: 'flex', gap: 8 }}>
-                    <button className="icon-btn" onClick={() => openEdit(s)}><Pencil size={16}/></button>
-                    {isPlatformAdmin && <button className="icon-btn danger" onClick={() => remove(s.id)}><Trash2 size={16}/></button>}
+                    <button className="icon-btn write-btn" onClick={() => openEdit(s)}><Pencil size={16}/></button>
+                    {isPlatformAdmin && <button className="icon-btn danger write-btn" onClick={() => remove(s.id)}><Trash2 size={16}/></button>}
                   </td>
                 </tr>
               ))}

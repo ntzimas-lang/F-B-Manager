@@ -3,11 +3,14 @@ import { supabase } from '../lib/supabase'
 import { logActivity } from '../lib/activity'
 import { useStores } from '../context/StoreContext'
 import { useLanguage } from '../context/LanguageContext'
+import { useAuth } from '../context/AuthContext'
 import { Download } from 'lucide-react'
+import { exportXlsx } from '../lib/exportExcel'
 
 export default function Stocktake() {
   const { stores, selectedStoreId } = useStores()
   const { t } = useLanguage()
+  const { readOnly, canExport } = useAuth()
   const activeStoreId = selectedStoreId !== 'all' ? selectedStoreId : (stores[0]?.id || '')
   const store = stores.find(s => s.id === activeStoreId)
 
@@ -69,18 +72,14 @@ export default function Stocktake() {
     load()
   }
 
-  function exportCSV(record) {
-    const rows = [[t('ingredient'), t('systemQty'), t('realQty'), t('variance')]]
+  async function exportCSV(record) {
+    const rows = [[t('ingredient'), t('unit'), t('systemQty'), t('realQty'), t('variance'), t('unitPrice'), t('total')]]
     record.stocktake_items.forEach(it => {
       const ing = ingredients.find(i => i.id === it.ingredient_id)
-      rows.push([ing?.name || '', it.system_qty, it.counted_qty, it.variance])
+      const p = Number(ing?.current_price || 0)
+      rows.push([ing?.name || '', ing?.unit || '', Number(it.system_qty), Number(it.counted_qty), Number(it.variance), p, Math.round(Number(it.variance) * p * 100) / 100])
     })
-    const csv = rows.map(r => r.join(',')).join('\n')
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url; a.download = `stocktake-${store?.name || ''}-${record.month}.csv`; a.click()
-    URL.revokeObjectURL(url)
+    await exportXlsx(`stocktake-${store?.name || ''}-${record.month}`, [{ name: record.month, rows }])
   }
 
   if (!activeStoreId) return <div className="card">{t('addStoreFirst')}</div>
@@ -119,7 +118,7 @@ export default function Stocktake() {
                     <tr key={ing.id}>
                       <td>{ing.name}</td>
                       <td>{sys} {ing.unit}</td>
-                      <td><input type="number" step="0.01" style={{width:100}} placeholder={String(sys)} value={val ?? ''} onChange={e => setCounts({...counts, [ing.id]: e.target.value})} /></td>
+                      <td><input type="number" step="0.01" disabled={readOnly} style={{width:100}} placeholder={String(sys)} value={val ?? ''} onChange={e => setCounts({...counts, [ing.id]: e.target.value})} /></td>
                       <td>{diff !== 0 ? <span style={{color: diff < 0 ? 'var(--danger)' : 'var(--ok)', fontWeight:600}}>{diff > 0 ? '+' : ''}{diff.toFixed(2)}</span> : '—'}</td>
                     </tr>
                   )
@@ -127,7 +126,7 @@ export default function Stocktake() {
                 {ingredients.length === 0 && <tr><td colSpan={4}>{t('noIngredients')}</td></tr>}
               </tbody>
             </table>
-            {ingredients.length > 0 && <button className="btn" style={{marginTop:16}} onClick={saveStocktake}>{t('recordStocktake')}</button>}
+            {ingredients.length > 0 && <button className="btn write-btn" style={{marginTop:16}} onClick={saveStocktake}>{t('recordStocktake')}</button>}
           </>
         )}
       </div>
@@ -144,7 +143,7 @@ export default function Stocktake() {
                   <tr key={st.id}>
                     <td>{st.month}</td><td>{st.date}</td>
                     <td>{diffCount > 0 ? <span className="badge badge-warn">{diffCount} {t('differences')}</span> : <span className="badge badge-ok">{t('noVariance')}</span>}</td>
-                    <td><button className="btn btn-outline" onClick={() => exportCSV(st)}><Download size={14}/> {t('exportCsv')}</button></td>
+                    <td><button className="btn btn-outline export-btn" onClick={() => exportCSV(st)}><Download size={14}/> {t('exportExcel')}</button></td>
                   </tr>
                 )
               })}

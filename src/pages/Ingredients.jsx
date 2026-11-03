@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { logActivity } from '../lib/activity'
 import { useLanguage } from '../context/LanguageContext'
+import { useAuth } from '../context/AuthContext'
 import { Plus, Trash2, Pencil, X, Upload, LineChart } from 'lucide-react'
 import { readSheet } from 'read-excel-file/browser'
 
 export default function Ingredients() {
   const { t } = useLanguage()
+  const { hideCosts } = useAuth()
   const [ingredients, setIngredients] = useState([])
   const [suppliers, setSuppliers] = useState([])
   const [showForm, setShowForm] = useState(false)
@@ -43,23 +45,23 @@ export default function Ingredients() {
         <div style={{display:'flex', justifyContent:'space-between', marginBottom:12}}>
           <h2 style={{margin:0}}>{t('ingredients')} ({ingredients.length})</h2>
           <div style={{display:'flex', gap:8}}>
-            <button className="btn btn-outline" onClick={() => setShowImport(true)}><Upload size={16}/> {t('importExcel')}</button>
-            <button className="btn" onClick={() => { setEditIngredient(null); setShowForm(true) }}><Plus size={16}/> {t('newIngredient')}</button>
+            <button className="btn btn-outline write-master" onClick={() => setShowImport(true)}><Upload size={16}/> {t('importExcel')}</button>
+            <button className="btn write-master" onClick={() => { setEditIngredient(null); setShowForm(true) }}><Plus size={16}/> {t('newIngredient')}</button>
           </div>
         </div>
         <table>
-          <thead><tr><th>{t('name')}</th><th>{t('unit')}</th><th>{t('price')}</th><th>{t('supplier')}</th><th></th></tr></thead>
+          <thead><tr><th>{t('name')}</th><th>{t('unit')}</th>{!hideCosts && <th>{t('price')}</th>}<th>{t('supplier')}</th><th></th></tr></thead>
           <tbody>
             {ingredients.map(ing => (
               <tr key={ing.id}>
                 <td>{ing.name}</td>
                 <td>{ing.unit}</td>
-                <td>{Number(ing.current_price).toFixed(3)} €</td>
+                {!hideCosts && <td>{Number(ing.current_price).toFixed(3)} €</td>}
                 <td>{suppliers.find(s => s.id === ing.supplier_id)?.name || '-'}</td>
                 <td style={{display:'flex', gap:8}}>
-                  <button className="icon-btn" title={t('priceHistory')} onClick={() => setHistoryIng(ing)}><LineChart size={16}/></button>
-                  <button className="icon-btn" onClick={() => { setEditIngredient(ing); setShowForm(true) }}><Pencil size={16}/></button>
-                  <button className="icon-btn danger" onClick={() => deleteIngredient(ing.id)}><Trash2 size={16}/></button>
+                  {!hideCosts && <button className="icon-btn" title={t('priceHistory')} onClick={() => setHistoryIng(ing)}><LineChart size={16}/></button>}
+                  <button className="icon-btn write-master" onClick={() => { setEditIngredient(ing); setShowForm(true) }}><Pencil size={16}/></button>
+                  <button className="icon-btn danger write-master" onClick={() => deleteIngredient(ing.id)}><Trash2 size={16}/></button>
                 </td>
               </tr>
             ))}
@@ -246,7 +248,7 @@ function ImportModal({ ingredients, suppliers, onClose, onDone }) {
               </table>
             </div>
             <div className="modal-actions">
-              <button className="btn" disabled={busy || okCount === 0} onClick={doImport}>{busy ? t('saving') : `${t('importBtn')} (${okCount})`}</button>
+              <button className="btn write-master" disabled={busy || okCount === 0} onClick={doImport}>{busy ? t('saving') : `${t('importBtn')} (${okCount})`}</button>
             </div>
           </>
         )}

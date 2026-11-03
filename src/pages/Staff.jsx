@@ -3,7 +3,9 @@ import { supabase } from '../lib/supabase'
 import { logActivity } from '../lib/activity'
 import { useStores } from '../context/StoreContext'
 import { useLanguage } from '../context/LanguageContext'
+import { useAuth } from '../context/AuthContext'
 import { Plus, X, Trash2, Download, Pencil } from 'lucide-react'
+import { exportXlsx } from '../lib/exportExcel'
 
 function shiftHours(start, end) {
   const [sh, sm] = start.split(':').map(Number)
@@ -16,6 +18,7 @@ function shiftHours(start, end) {
 export default function Staff() {
   const { stores, selectedStoreId } = useStores()
   const { t } = useLanguage()
+  const { hideCosts } = useAuth()
   const [subTab, setSubTab] = useState('employees')
   const [employees, setEmployees] = useState([])
   const [shifts, setShifts] = useState([])
@@ -57,25 +60,25 @@ export default function Staff() {
       <div style={{display:'flex', gap:8, marginBottom:20}}>
         <button className={subTab==='employees' ? 'btn' : 'btn btn-outline'} onClick={() => setSubTab('employees')}>{t('employees')}</button>
         <button className={subTab==='shifts' ? 'btn' : 'btn btn-outline'} onClick={() => setSubTab('shifts')}>{t('shifts')}</button>
-        <button className={subTab==='payroll' ? 'btn' : 'btn btn-outline'} onClick={() => setSubTab('payroll')}>{t('payroll')}</button>
+        {!hideCosts && <button className={subTab==='payroll' ? 'btn' : 'btn btn-outline'} onClick={() => setSubTab('payroll')}>{t('payroll')}</button>}
       </div>
 
       {subTab === 'employees' && (
         <div className="card">
           <div style={{display:'flex', justifyContent:'space-between', marginBottom:12}}>
             <h2 style={{margin:0}}>{t('employees')} ({employees.length})</h2>
-            <button className="btn" onClick={() => { setEditEmployee(null); setShowEmpForm(true) }}><Plus size={16}/> {t('newEmployee')}</button>
+            <button className="btn write-master" onClick={() => { setEditEmployee(null); setShowEmpForm(true) }}><Plus size={16}/> {t('newEmployee')}</button>
           </div>
           <table>
-            <thead><tr><th>{t('name')}</th><th>{t('role')}</th><th>{t('store')}</th><th>{t('hourlyRate')}</th><th></th></tr></thead>
+            <thead><tr><th>{t('name')}</th><th>{t('role')}</th><th>{t('store')}</th>{!hideCosts && <th>{t('hourlyRate')}</th>}<th></th></tr></thead>
             <tbody>
               {employees.map(e => (
                 <tr key={e.id}>
                   <td>{e.name}</td><td>{e.role}</td><td>{e.stores?.name}</td>
-                  <td>{Number(e.hourly_rate).toFixed(2)} €{t('perHour')}</td>
+                  {!hideCosts && <td>{Number(e.hourly_rate).toFixed(2)} €{t('perHour')}</td>}
                   <td style={{display:'flex', gap:8}}>
-                    <button className="icon-btn" onClick={() => { setEditEmployee(e); setShowEmpForm(true) }}><Pencil size={16}/></button>
-                    <button className="icon-btn danger" onClick={() => deleteEmployee(e.id)}><Trash2 size={16}/></button>
+                    <button className="icon-btn write-master" onClick={() => { setEditEmployee(e); setShowEmpForm(true) }}><Pencil size={16}/></button>
+                    <button className="icon-btn danger write-master" onClick={() => deleteEmployee(e.id)}><Trash2 size={16}/></button>
                   </td>
                 </tr>
               ))}
@@ -91,7 +94,7 @@ export default function Staff() {
             <h2 style={{margin:0}}>{t('shifts')} — {month}</h2>
             <div style={{display:'flex', gap:8}}>
               <input type="month" value={month} onChange={e => setMonth(e.target.value)} />
-              <button className="btn" onClick={() => setShowShiftForm(true)}><Plus size={16}/> {t('add')}</button>
+              <button className="btn write-btn" onClick={() => setShowShiftForm(true)}><Plus size={16}/> {t('add')}</button>
             </div>
           </div>
           <table>
@@ -108,7 +111,7 @@ export default function Staff() {
                        sh.type === 'leave' ? <span className="badge badge-warn">{t('leave')}</span> : <span className="badge badge-warn">{t('dayoff')}</span>}
                     </td>
                     <td>{hours ? `${hours.toFixed(1)} ${t('hoursShort')}` : '-'}</td>
-                    <td><button className="icon-btn danger" onClick={() => deleteShift(sh.id)}><Trash2 size={14}/></button></td>
+                    <td><button className="icon-btn danger write-btn" onClick={() => deleteShift(sh.id)}><Trash2 size={14}/></button></td>
                   </tr>
                 )
               })}
@@ -118,7 +121,7 @@ export default function Staff() {
         </div>
       )}
 
-      {subTab === 'payroll' && <Payroll employees={employees} shifts={shifts} month={month} setMonth={setMonth} />}
+      {subTab === 'payroll' && !hideCosts && <Payroll employees={employees} shifts={shifts} month={month} setMonth={setMonth} />}
 
       {showEmpForm && <EmployeeFormModal stores={stores} employee={editEmployee} onClose={() => setShowEmpForm(false)} onSaved={() => { setShowEmpForm(false); load() }} />}
       {showShiftForm && <ShiftFormModal stores={stores} selectedStoreId={selectedStoreId} onClose={() => setShowShiftForm(false)} onSaved={() => { setShowShiftForm(false); load() }} />}
@@ -235,16 +238,16 @@ function Payroll({ employees, shifts, month, setMonth }) {
   })
   const totalPay = rows.reduce((s, r) => s + r.pay, 0)
 
-  function exportCSV() {
-    const csvRows = [[t('employees'), t('store'), t('role'), t('hoursWorkedLabel'), t('leaveDaysLabel'), t('dayoffDaysLabel'), t('hourlyRate'), t('grossPayLabel')]]
-    rows.forEach(r => csvRows.push([r.name, r.stores?.name || '', r.role, r.hoursWorked.toFixed(2), r.leaveDays, r.dayoffDays, Number(r.hourly_rate).toFixed(2), r.pay.toFixed(2)]))
-    csvRows.push(['', '', '', '', '', '', t('total').toUpperCase(), totalPay.toFixed(2)])
-    const csv = csvRows.map(r => r.join(',')).join('\n')
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url; a.download = `payroll-${month}.csv`; a.click()
-    URL.revokeObjectURL(url)
+  async function exportCSV() {
+    const r2 = (n) => Math.round(n * 100) / 100
+    const pr = [[t('employees'), t('store'), t('role'), t('hoursWorkedLabel'), t('leaveDaysLabel'), t('dayoffDaysLabel'), t('hourlyRate'), t('grossPayLabel')]]
+    rows.forEach(r => pr.push([r.name, r.stores?.name || '', r.role, r2(r.hoursWorked), r.leaveDays, r.dayoffDays, Number(r.hourly_rate || 0), r2(r.pay)]))
+    pr.push(['', '', '', '', '', '', t('total'), r2(totalPay)])
+    const sr = [[t('date'), t('employees'), t('type'), t('start'), t('end'), t('hours')]]
+    shifts.slice().sort((a, b) => a.date.localeCompare(b.date)).forEach(s => {
+      sr.push([s.date, employees.find(e => e.id === s.employee_id)?.name || '', s.type, s.start_time || '', s.end_time || '', s.type === 'shift' && s.start_time && s.end_time ? r2(shiftHours(s.start_time, s.end_time)) : 0])
+    })
+    await exportXlsx(`payroll-${month}`, [{ name: t('payroll'), rows: pr }, { name: t('shifts'), rows: sr }])
   }
 
   return (
@@ -253,7 +256,7 @@ function Payroll({ employees, shifts, month, setMonth }) {
         <h2 style={{margin:0}}>{t('payroll')} — {month}</h2>
         <div style={{display:'flex', gap:8}}>
           <input type="month" value={month} onChange={e => setMonth(e.target.value)} />
-          <button className="btn" onClick={exportCSV}><Download size={16}/> {t('exportCsv')}</button>
+          <button className="btn export-btn" onClick={exportCSV}><Download size={16}/> {t('exportExcel')}</button>
         </div>
       </div>
       <table>
