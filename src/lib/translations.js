@@ -32,6 +32,8 @@ export const translations = {
     purchases: 'Αγορές', wasteValue: 'Φύρα (αξία)', byMonth: 'Ανά μήνα', byDish: 'Ανά πιάτο', noSalesPeriod: 'Δεν υπάρχουν πωλήσεις αυτή την περίοδο.',
     costNote: 'Το κόστος υπολογίζεται από τις συνταγές με τις τρέχουσες τιμές των πρώτων υλών. Οι αγορές αφορούν παραλαβές με καταχωρημένη τιμή.',
     monthRevenue: 'Έσοδα Μήνα',
+    importPhoto: 'Φωτογραφία τιμολογίου', photoReading: 'Διαβάζω το τιμολόγιο…', photoError: 'Δεν διαβάστηκε η φωτογραφία, δοκίμασε ξανά', photoNoKey: 'Δεν έχει οριστεί το κλειδί ανάγνωσης (ANTHROPIC_API_KEY) στο Supabase',
+    importPdf: 'Εισαγωγή τιμολογίου PDF', pdfNoLines: 'Δεν βρέθηκαν γραμμές στο PDF', pdfLinesRead: 'γραμμές διαβάστηκαν', pdfUnmatched: 'χωρίς αντιστοίχιση — διάλεξε υλικό (θα το θυμάται)', pdfError: 'Δεν διαβάστηκε το PDF',
     exportExcel: 'Excel', summary: 'Σύνοψη', purchasesBySupplier: 'Αγορές ανά προμηθευτή', invoicesCount: 'Παραλαβές', stockSheet: 'Απόθεμα', receiptsSheet: 'Παραλαβές', salesSheet: 'Πωλήσεις',
     // Login
     login: 'Σύνδεση', wrongCredentials: 'Λάθος email ή κωδικός.',
@@ -106,6 +108,8 @@ export const translations = {
     noUsers: 'Δεν υπάρχουν χρήστες ακόμα.',
   },
   en: {
+    importPhoto: 'Photo of invoice', photoReading: 'Reading the invoice…', photoError: 'Could not read the photo, try again', photoNoKey: 'Reading key (ANTHROPIC_API_KEY) is not set in Supabase',
+    importPdf: 'Import invoice PDF', pdfNoLines: 'No lines found in PDF', pdfLinesRead: 'lines read', pdfUnmatched: 'unmatched — pick an ingredient (it will be remembered)', pdfError: 'Could not read the PDF',
     exportExcel: 'Excel', summary: 'Summary', purchasesBySupplier: 'Purchases by supplier', invoicesCount: 'Receipts', stockSheet: 'Stock', receiptsSheet: 'Receipts', salesSheet: 'Sales',
     monthRevenue: 'Revenue This Month',
     results: 'Results', month: 'Month', quarter: 'Quarter', year: 'Year', season: 'Season', vsPrev: 'vs prev.', previousPeriod: 'Previous period',

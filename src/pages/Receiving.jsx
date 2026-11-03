@@ -5,7 +5,7 @@ import { logActivity } from '../lib/activity'
 import { useStores } from '../context/StoreContext'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
-import { ScanLine, Plus, Trash2, X, Download } from 'lucide-react'
+import { ScanLine, Plus, Trash2, X, Download, FileText, Camera } from 'lucide-react'
 import { exportXlsx } from '../lib/exportExcel'
 import { PRICE_ALERT_PCT } from '../lib/prices'
 
@@ -30,12 +30,17 @@ export default function Receiving() {
   const [saving, setSaving] = useState(false)
   const [alerts, setAlerts] = useState([])
   const scannerRef = useRef(null)
+  const [codeMap, setCodeMap] = useState([])
+  const [importMsg, setImportMsg] = useState('')
+  const [supName, setSupName] = useState('')
 
   async function load() {
     const [{ data: ing }, { data: sup }] = await Promise.all([
       supabase.from('ingredients').select('*').order('name'),
       supabase.from('suppliers').select('*').order('name'),
     ])
+    const { data: cm } = await supabase.from('supplier_item_codes').select('*')
+    setCodeMap(cm || [])
     setIngredients(ing || [])
     setSuppliers(sup || [])
     if (activeStoreId) {
@@ -61,8 +66,71 @@ export default function Receiving() {
     const ref = invoiceRef.trim()
     if (!ref || !activeStoreId) { setDuplicate(false); return }
     supabase.from('goods_receipts').select('id').eq('store_id', activeStoreId).eq('invoice_ref', ref).maybeSingle()
-      .then(({ data }) => setDuplicate(!!data))
-  }, [invoiceRef, activeStoreId])
+      .then(async ({ data }) => {
+        if (data) return setDuplicate(true)
+        if (!invoiceNumber.trim()) return setDuplicate(false)
+        const { data: d2 } = await supabase.from('goods_receipts').select('id').eq('store_id', activeStoreId).eq('invoice_number', invoiceNumber.trim()).eq('receipt_date', date).maybeSingle()
+        setDuplicate(!!d2)
+      })
+  }, [invoiceRef, invoiceNumber, date, activeStoreId])
+
+  function applyInvoice(inv) {
+    const key = (l) => l.code || l.description
+    if (!inv.lines.length) { setImportMsg(t('pdfNoLines')); return }
+    const sname = (inv.supplierName || '').trim()
+    const sup = suppliers.find(s => sname && (s.name.toLowerCase().includes(sname.toLowerCase().slice(0, 8)) || sname.toLowerCase().includes(s.name.toLowerCase())))
+    if (sup) setSupplierId(sup.id)
+    if (inv.number) setInvoiceNumber(inv.number)
+    if (inv.date) setDate(inv.date)
+    if (!invoiceRef.trim()) setInvoiceRef(inv.mark ? `MARK:${inv.mark}` : `${sname}:${inv.number}`)
+    setSupName(sname)
+    setLines(inv.lines.map(l => {
+      const m = codeMap.find(c => c.item_code === key(l) && c.supplier_name === sname)
+      const f = m ? Number(m.factor) : 1
+      return {
+        ingredient_id: m?.ingredient_id || '', code: key(l), desc: l.description, iunit: l.unit,
+        rawQty: l.qty, rawPrice: l.price, factor: f,
+        quantity: String(Math.round(l.qty * f * 1000) / 1000), unit_price: String(Math.round((l.price / f) * 10000) / 10000),
+      }
+    }))
+    const unmatched = inv.lines.filter(l => !codeMap.find(c => c.item_code === key(l) && c.supplier_name === sname)).length
+    setImportMsg(`${inv.lines.length} ${t('pdfLinesRead')}${unmatched ? ` — ${unmatched} ${t('pdfUnmatched')}` : ''}`)
+  }
+
+  async function importPdf(file) {
+    if (!file) return
+    setImportMsg('')
+    try {
+      const { parseInvoicePdf } = await import('../lib/invoicePdf')
+      applyInvoice(await parseInvoicePdf(file))
+    } catch (e) { console.error(e); setImportMsg(t('pdfError')) }
+  }
+
+  async function importPhoto(file) {
+    if (!file) return
+    setImportMsg(t('photoReading'))
+    try {
+      const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' })
+      const sc = Math.min(1, 1800 / Math.max(bmp.width, bmp.height))
+      const cv = document.createElement('canvas'); cv.width = Math.round(bmp.width * sc); cv.height = Math.round(bmp.height * sc)
+      cv.getContext('2d').drawImage(bmp, 0, 0, cv.width, cv.height)
+      const image = cv.toDataURL('image/jpeg', 0.85).split(',')[1]
+      const { data, error } = await supabase.functions.invoke('read-invoice', { body: { image, media_type: 'image/jpeg' } })
+      if (error || !data || data.error) { setImportMsg(data?.error === 'no_key' ? t('photoNoKey') : t('photoError')); return }
+      applyInvoice({
+        supplierName: data.supplier_name, number: [data.series, data.number].filter(Boolean).join('-'),
+        date: /^\d{4}-\d{2}-\d{2}$/.test(data.date || '') ? data.date : '', mark: data.mark || '',
+        lines: (data.lines || []).filter(l => Number(l.quantity) > 0).map(l => ({
+          code: l.code || '', description: l.description, unit: l.unit || '', qty: Number(l.quantity),
+          price: Math.round((Number(l.net_total) / Number(l.quantity)) * 10000) / 10000,
+        })),
+      })
+    } catch (e) { console.error(e); setImportMsg(t('photoError')) }
+  }
+  function setFactor(i, v) {
+    const l = lines[i], f = Number(v) > 0 ? Number(v) : 1
+    setLine(i, { factor: v, quantity: String(Math.round(l.rawQty * f * 1000) / 1000), unit_price: String(Math.round((l.rawPrice / f) * 10000) / 10000) })
+  }
 
   useEffect(() => () => { stopScan() }, [])
 
@@ -157,6 +225,8 @@ export default function Receiving() {
         note: `${t('receiving')}: ${invoiceNumber || ref.slice(0, 40)}`,
       })
     }
+    const maps = valid.filter(l => l.code && supName).map(l => ({ supplier_name: supName, item_code: l.code, ingredient_id: l.ingredient_id, factor: Number(l.factor) > 0 ? Number(l.factor) : 1 }))
+    if (maps.length) await supabase.from('supplier_item_codes').upsert(maps, { onConflict: 'company_id,supplier_name,item_code' })
     await logActivity('create', 'receipt', store?.name, `${invoiceNumber || ref.slice(0, 40)}: ${valid.length}`)
     setInvoiceRef(''); setInvoiceNumber(''); setSupplierId(''); setLines([{ ingredient_id: '', quantity: '', unit_price: '' }])
     setSaving(false)
@@ -186,6 +256,15 @@ export default function Receiving() {
               ? <button className="btn write-btn" type="button" onClick={startScan}><ScanLine size={16} /> {t('scan')}</button>
               : <button className="btn btn-outline" type="button" onClick={stopScan}><X size={16} /> {t('cancel')}</button>}
           </div>
+          <div style={{ marginTop: 8 }}>
+            <label className="btn write-btn" style={{ cursor: 'pointer', marginRight: 8 }}><Camera size={16} /> {t('importPhoto')}
+              <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => { importPhoto(e.target.files[0]); e.target.value = '' }} />
+            </label>
+            <label className="btn btn-outline write-btn" style={{ cursor: 'pointer' }}><FileText size={16} /> {t('importPdf')}
+              <input type="file" accept="application/pdf" style={{ display: 'none' }} onChange={e => { importPdf(e.target.files[0]); e.target.value = '' }} />
+            </label>
+            {importMsg && <span style={{ marginLeft: 10, fontSize: 13 }}>{importMsg}</span>}
+          </div>
           {scanError && <div style={{ color: 'var(--danger)', marginTop: 6 }}>{scanError}</div>}
           {duplicate && <div style={{ color: 'var(--danger)', marginTop: 6, fontWeight: 600 }}>{t('duplicateInvoice')}</div>}
         </div>
@@ -212,6 +291,9 @@ export default function Receiving() {
                       <option value="">{t('selectOption')}</option>
                       {ingredients.map(x => <option key={x.id} value={x.id}>{x.name}</option>)}
                     </select>
+                    {l.code && <div style={{ fontSize: 12, color: 'var(--text-muted, #666)', marginTop: 4 }}>
+                      {l.desc} · {l.rawQty} {l.iunit} × <input type="number" step="0.01" min="0" style={{ width: 60 }} value={l.factor} onChange={e => setFactor(i, e.target.value)} />
+                    </div>}
                   </td>
                   <td><input type="number" step="0.01" min="0" style={{ width: 100 }} value={l.quantity} onChange={e => setLine(i, { quantity: e.target.value })} /> {ing?.unit}</td>
                   {!hideCosts && <td>
