@@ -1,5 +1,4 @@
 import { Fragment, useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
