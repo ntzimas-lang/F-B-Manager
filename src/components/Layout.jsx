@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { LayoutDashboard, ChefHat, Calculator, Boxes, Truck, Store, ClipboardCheck, Users, Wheat, History, LogOut, Menu, Receipt, UserCog, PackageCheck, Settings, BarChart3 } from 'lucide-react'
 import { useStores } from '../context/StoreContext'
 import { useAuth } from '../context/AuthContext'
@@ -10,6 +10,8 @@ export default function Layout() {
   const { profile, session, signOut, hasFeature, isPlatformAdmin, readOnly, role, isStoreScoped } = useAuth()
   const { lang, chooseLang, t } = useLanguage()
   const [menuOpen, setMenuOpen] = useState(false)
+  const { pathname } = useLocation()
+  const inSettings = pathname === '/admin' || pathname === '/companies'
 
   return (
     <div className="app-shell" data-role={role} data-readonly={readOnly ? '1' : '0'}>
@@ -125,7 +127,7 @@ export default function Layout() {
         <div className="topbar">
           <button className="menu-btn" onClick={() => setMenuOpen(true)}><Menu size={20} /></button>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            {!loading && !isStoreScoped && (
+            {!loading && !isStoreScoped && !inSettings && (
               <select
                 className="store-select"
                 value={selectedStoreId}
