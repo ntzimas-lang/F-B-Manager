@@ -11,7 +11,7 @@ export default function Layout() {
   const { lang, chooseLang, t } = useLanguage()
   const [menuOpen, setMenuOpen] = useState(false)
   const { pathname } = useLocation()
-  const inSettings = pathname === '/admin' || pathname === '/companies'
+  const inSettings = ['/admin', '/companies', '/stores', '/recipes', '/ingredients', '/costing', '/activity'].includes(pathname)
 
   return (
     <div className="app-shell" data-role={role} data-readonly={readOnly ? '1' : '0'}>
