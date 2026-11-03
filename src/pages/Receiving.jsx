@@ -64,9 +64,11 @@ export default function Receiving() {
   // έλεγχος διπλοτύπου
   useEffect(() => {
     const ref = invoiceRef.trim()
-    if (!ref || !activeStoreId) { setDuplicate(false); return }
-    supabase.from('goods_receipts').select('id').eq('store_id', activeStoreId).eq('invoice_ref', ref).maybeSingle()
-      .then(async ({ data }) => {
+    if ((!ref && !invoiceNumber.trim()) || !activeStoreId) { setDuplicate(false); return }
+    const q = ref
+      ? supabase.from('goods_receipts').select('id').eq('store_id', activeStoreId).eq('invoice_ref', ref).maybeSingle()
+      : Promise.resolve({ data: null })
+    q.then(async ({ data }) => {
         if (data) return setDuplicate(true)
         if (!invoiceNumber.trim()) return setDuplicate(false)
         const { data: d2 } = await supabase.from('goods_receipts').select('id').eq('store_id', activeStoreId).eq('invoice_number', invoiceNumber.trim()).eq('receipt_date', date).maybeSingle()
@@ -176,9 +178,9 @@ export default function Receiving() {
   function setLine(i, patch) { setLines(lines.map((l, idx) => idx === i ? { ...l, ...patch } : l)) }
 
   async function save() {
-    const ref = invoiceRef.trim()
+    const ref = invoiceRef.trim() || `MANUAL:${invoiceNumber.trim()}:${date}`
     const valid = lines.filter(l => l.ingredient_id && Number(l.quantity) > 0)
-    if (!ref || valid.length === 0 || duplicate || !activeStoreId) return
+    if ((!invoiceRef.trim() && !invoiceNumber.trim()) || valid.length === 0 || duplicate || !activeStoreId) return
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
     let supId = supplierId
@@ -266,14 +268,7 @@ export default function Receiving() {
         <h2 style={{ marginTop: 0 }}>{t('newReceipt')} — {store?.name}</h2>
 
         <div className="form-row">
-          <label>{t('invoiceQr')}</label>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input style={{ flex: 1 }} value={invoiceRef} onChange={e => setInvoiceRef(e.target.value)} placeholder={t('invoiceQrHint')} />
-            {!scanning
-              ? <button className="btn write-btn" type="button" onClick={startScan}><ScanLine size={16} /> {t('scan')}</button>
-              : <button className="btn btn-outline" type="button" onClick={stopScan}><X size={16} /> {t('cancel')}</button>}
-          </div>
-          <div style={{ marginTop: 8 }}>
+          <div>
             <label className="btn write-btn" style={{ cursor: 'pointer', marginRight: 8 }}><Camera size={16} /> {t('importPhoto')}
               <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => { importPhoto(e.target.files[0]); e.target.value = '' }} />
             </label>
@@ -285,7 +280,6 @@ export default function Receiving() {
           {scanError && <div style={{ color: 'var(--danger)', marginTop: 6 }}>{scanError}</div>}
           {duplicate && <div style={{ color: 'var(--danger)', marginTop: 6, fontWeight: 600 }}>{t('duplicateInvoice')}</div>}
         </div>
-        {scanning && <div id="qr-reader" style={{ width: '100%', maxWidth: 360, marginBottom: 16 }} />}
 
         <div className="form-row"><label>{t('invoiceNumber')}</label><input value={invoiceNumber} onChange={e => setInvoiceNumber(e.target.value)} /></div>
         <div className="form-row"><label>{t('supplier')}</label>
@@ -331,7 +325,7 @@ export default function Receiving() {
         </table>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16 }}>
           <button className="btn btn-outline write-btn" onClick={() => setLines([...lines, { ingredient_id: '', quantity: '', unit_price: '' }])}><Plus size={14} /> {t('addLine')}</button>
-          <button className="btn" onClick={save} disabled={saving || duplicate || !invoiceRef.trim()}>{saving ? t('saving') : t('recordReceipt')}</button>
+          <button className="btn" onClick={save} disabled={saving || duplicate || (!invoiceRef.trim() && !invoiceNumber.trim())}>{saving ? t('saving') : t('recordReceipt')}</button>
         </div>
       </div>
 
