@@ -5,6 +5,7 @@ import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import { Download } from 'lucide-react'
 import { priceChanges } from '../lib/prices'
+import PriceTrends from './PriceTrends'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { notoSansBase64 } from '../assets/notoSansFont'
@@ -27,6 +28,8 @@ export default function Dashboard() {
   const [storeSummary, setStoreSummary] = useState([])
   const [pendingOrdersList, setPendingOrdersList] = useState([])
   const [priceAlerts, setPriceAlerts] = useState([])
+  const [tab, setTab] = useState('overview')
+  const canPrices = hasFeature('receiving') && !hideCosts
 
   useEffect(() => {
     async function load() {
@@ -196,8 +199,16 @@ export default function Dashboard() {
     <div>
       <div className="topbar" style={{ marginBottom: 20 }}>
         <h1 style={{ margin: 0 }}>{t('dashboard')}</h1>
-        <button className="btn" onClick={exportPDF}><Download size={16} /> {t('exportPdf')}</button>
+        {tab === 'overview' && <button className="btn" onClick={exportPDF}><Download size={16} /> {t('exportPdf')}</button>}
       </div>
+      {canPrices && (
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+          <button className={tab === 'overview' ? 'btn' : 'btn btn-outline'} onClick={() => setTab('overview')}>{t('overview')}</button>
+          <button className={tab === 'prices' ? 'btn' : 'btn btn-outline'} onClick={() => setTab('prices')}>{t('priceTrends')}</button>
+        </div>
+      )}
+      {tab === 'prices' && canPrices && <PriceTrends />}
+      {tab === 'overview' && (<>
 
       <div className="grid grid-4" style={{ marginBottom: 20 }}>
         <div className="card"><div className="stat-label">{t('totalStores')}</div><div className="stat-value">{stores.length}</div></div>
@@ -219,7 +230,7 @@ export default function Dashboard() {
 
       {hasFeature('receiving') && !hideCosts && priceAlerts.length > 0 && (
         <div className="card" style={{ marginBottom: 20 }}>
-          <h2 style={{ marginTop: 0 }}>{t('priceMoves')}</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><h2 style={{ marginTop: 0 }}>{t('priceMoves')}</h2><button className="btn btn-outline" onClick={() => setTab('prices')}>{t('seeDetail')} →</button></div>
           <table>
             <thead><tr><th>{t('ingredient')}</th><th>{t('previousPrice')}</th><th>{t('newPrice')}</th><th></th><th>{t('range90')}</th></tr></thead>
             <tbody>
@@ -315,6 +326,7 @@ export default function Dashboard() {
           Ξεκίνα προσθέτοντας τα καταστήματά σου στην καρτέλα <b>Καταστήματα</b>.
         </div>
       )}
+      </>)}
     </div>
   )
 }

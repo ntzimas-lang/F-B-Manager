@@ -1,5 +1,6 @@
 export const translations = {
   el: {
+    overview: 'Επισκόπηση', priceTrends: 'Τιμές Πρώτων Υλών', firstPrice: 'Αρχική τιμή', lastPrice: 'Τελευταία τιμή', change: 'Μεταβολή', receiptsCount: 'Παραλαβές', daysShort: 'ημ.', search: 'Αναζήτηση…', onlyChanged: 'Μόνο με μεταβολή', ingredientsTracked: 'Πρώτες ύλες', priceUps: 'Αυξήσεις', priceDowns: 'Μειώσεις', avgChange: 'Μέση μεταβολή', seeDetail: 'Αναλυτικά', detail: 'Αναλυτικά (παραλαβές)', priceMoves: 'Διακυμάνσεις τιμών πρώτων υλών (30 ημέρες)', range90: 'Εύρος 90 ημ. (παραλαβές)', noCategory: 'Χωρίς κατηγορία', purchasesByCategory: 'Αγορές ανά κατηγορία', start: 'Έναρξη', end: 'Λήξη',
     // Πλοήγηση
     dashboard: 'Πίνακας Ελέγχου', stores: 'Καταστήματα', recipes: 'Μενού & Συνταγές', ingredients: 'Πρώτες Ύλες',
     costing: 'Food Costing', inventory: 'Απόθεμα', sales: 'Πωλήσεις', stocktake: 'Απογραφή', orders: 'Παραγγελίες',
@@ -109,6 +110,7 @@ export const translations = {
     noUsers: 'Δεν υπάρχουν χρήστες ακόμα.',
   },
   en: {
+    overview: 'Overview', priceTrends: 'Ingredient prices', firstPrice: 'First price', lastPrice: 'Latest price', change: 'Change', receiptsCount: 'Receipts', daysShort: 'd', search: 'Search…', onlyChanged: 'Changed only', ingredientsTracked: 'Ingredients', priceUps: 'Increases', priceDowns: 'Decreases', avgChange: 'Avg change', seeDetail: 'Details', detail: 'Details (receipts)', priceMoves: 'Ingredient price movements (30 days)', range90: '90-day range (receipts)', noCategory: 'No category', purchasesByCategory: 'Purchases by category', start: 'Start', end: 'End',
     createIngredient: 'New ingredient from line',
     importPhoto: 'Photo of invoice', photoReading: 'Reading the invoice…', photoError: 'Could not read the photo, try again', photoNoKey: 'Reading key (ANTHROPIC_API_KEY) is not set in Supabase',
     importPdf: 'Import invoice PDF', pdfNoLines: 'No lines found in PDF', pdfLinesRead: 'lines read', pdfUnmatched: 'unmatched — pick an ingredient (it will be remembered)', pdfError: 'Could not read the PDF',
