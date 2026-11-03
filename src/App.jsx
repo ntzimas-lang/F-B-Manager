@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { StoreProvider } from './context/StoreContext'
 import { LanguageProvider, useLanguage } from './context/LanguageContext'
@@ -16,7 +16,6 @@ import Receiving from './pages/Receiving'
 import Orders from './pages/Orders'
 import Staff from './pages/Staff'
 import ActivityLog from './pages/ActivityLog'
-import Users from './pages/Users'
 import Companies from './pages/Companies'
 import SetPassword from './pages/SetPassword'
 import Admin from './pages/Admin'
@@ -72,7 +71,7 @@ function Gate() {
             <Route path="/reports" element={<Feature name="reports"><Reports /></Feature>} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/companies" element={<Companies />} />
-            <Route path="/users" element={<Users />} />
+            <Route path="/users" element={<Navigate to="/admin" replace />} />
           </Route>
         </Routes>
       </BrowserRouter>

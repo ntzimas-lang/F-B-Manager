@@ -79,6 +79,11 @@ export default function Layout() {
             <History size={18} /> {t('activity')}
           </NavLink>
         )}
+        {isPlatformAdmin && (
+          <NavLink to="/companies" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
+            <Users size={18} /> {t('customers')}
+          </NavLink>
+        )}
         {(isPlatformAdmin || ['super_user', 'owner', 'store_manager'].includes(role)) && (
           <NavLink to="/admin" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
             <Settings size={18} /> {t('settings')}
