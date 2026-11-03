@@ -81,7 +81,7 @@ export default function Layout() {
         )}
         {isPlatformAdmin && (
           <NavLink to="/companies" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
-            <Users size={18} /> {t('customers')}
+            <Users size={18} /> {t('controlCenter')}
           </NavLink>
         )}
         {(isPlatformAdmin || ['super_user', 'owner', 'store_manager'].includes(role)) && (
