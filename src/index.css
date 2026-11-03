@@ -220,9 +220,18 @@ input, select {
   h1 { font-size: 20px; }
   .modal { padding: 16px; }
   .stat-value { font-size: 22px; }
+  /* γραμμές παραλαβής ως κάρτες στο κινητό */
+  .stack-lines thead { display: none; }
+  .stack-lines, .stack-lines tbody, .stack-lines tr, .stack-lines td { display: block; width: 100%; }
+  .stack-lines tr { position: relative; border: 1px solid var(--border, #dcdcc8); border-radius: 10px; padding: 10px; margin-bottom: 10px; background: #fff; }
+  .stack-lines td { border: 0 !important; padding: 4px 0 !important; }
+  .stack-lines td[data-label]::before { content: attr(data-label); display: block; font-size: 12px; color: #6b6b5f; margin-bottom: 2px; }
+  .stack-lines select, .stack-lines input[type=number] { width: 100% !important; box-sizing: border-box; }
+  .stack-lines td.line-del { position: absolute; top: 6px; right: 6px; width: auto; }
 }
 
 /* Δικαιώματα ανά ρόλο */
 [data-readonly="1"] .write-btn, [data-readonly="1"] .write-master { display: none !important; }
 [data-role="shift_manager"] .write-master, [data-role="shift_manager"] .export-btn { display: none !important; }
 fieldset.ro { border: 0; padding: 0; margin: 0; min-width: 0; }
+label.btn:not(.btn-outline) { color: #fff; }

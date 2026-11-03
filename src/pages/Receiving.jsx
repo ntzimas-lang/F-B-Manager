@@ -274,14 +274,14 @@ export default function Receiving() {
         <h2 style={{ marginTop: 0 }}>{t('newReceipt')} — {store?.name}</h2>
 
         <div className="form-row">
-          <div>
-            <label className="btn write-btn" style={{ cursor: 'pointer', marginRight: 8 }}><Camera size={16} /> {t('importPhoto')}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <label className="btn write-btn" style={{ cursor: 'pointer', whiteSpace: 'nowrap' }}><Camera size={16} /> {t('importPhoto')}
               <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => { importPhoto(e.target.files[0]); e.target.value = '' }} />
             </label>
-            <label className="btn btn-outline write-btn" style={{ cursor: 'pointer' }}><FileText size={16} /> {t('importPdf')}
+            <label className="btn btn-outline write-btn" style={{ cursor: 'pointer', whiteSpace: 'nowrap' }}><FileText size={16} /> {t('importPdf')}
               <input type="file" accept="application/pdf" style={{ display: 'none' }} onChange={e => { importPdf(e.target.files[0]); e.target.value = '' }} />
             </label>
-            {importMsg && <span style={{ marginLeft: 10, fontSize: 13 }}>{importMsg}</span>}
+            {importMsg && <span style={{ fontSize: 13, flexBasis: '100%' }}>{importMsg}</span>}
           </div>
           {scanError && <div style={{ color: 'var(--danger)', marginTop: 6 }}>{scanError}</div>}
           {duplicate && <div style={{ color: 'var(--danger)', marginTop: 6, fontWeight: 600 }}>{t('duplicateInvoice')}</div>}
@@ -296,14 +296,14 @@ export default function Receiving() {
         </div>
         <div className="form-row"><label>{t('date')}</label><input type="date" value={date} onChange={e => setDate(e.target.value)} /></div>
 
-        <table>
+        <table className="stack-lines">
           <thead><tr><th>{t('ingredient')}</th><th>{t('quantity')}</th>{!hideCosts && <th>{t('unitPrice')} (€)</th>}<th></th></tr></thead>
           <tbody>
             {lines.map((l, i) => {
               const ing = ingredients.find(x => x.id === l.ingredient_id)
               return (
                 <tr key={i}>
-                  <td>
+                  <td data-label={t('ingredient')}>
                     <select value={l.ingredient_id} onChange={e => setLine(i, { ingredient_id: e.target.value })}>
                       <option value="">{t('selectOption')}</option>
                       {ingredients.map(x => <option key={x.id} value={x.id}>{x.name}</option>)}
@@ -313,8 +313,8 @@ export default function Receiving() {
                       {l.desc} · {l.rawQty} {l.iunit} × <input type="number" step="0.01" min="0" style={{ width: 60 }} value={l.factor} onChange={e => setFactor(i, e.target.value)} />
                     </div>}
                   </td>
-                  <td><input type="number" step="0.01" min="0" style={{ width: 100 }} value={l.quantity} onChange={e => setLine(i, { quantity: e.target.value })} /> {ing?.unit}</td>
-                  {!hideCosts && <td>
+                  <td data-label={t('quantity')}><input type="number" step="0.01" min="0" style={{ width: 100 }} value={l.quantity} onChange={e => setLine(i, { quantity: e.target.value })} /> {ing?.unit}</td>
+                  {!hideCosts && <td data-label={`${t('unitPrice')} (€)`}>
                     <input type="number" step="0.001" min="0" style={{ width: 100 }} value={l.unit_price} onChange={e => setLine(i, { unit_price: e.target.value })} />
                     {(() => {
                       const cur = Number(ing?.current_price), np = Number(l.unit_price)
@@ -323,7 +323,7 @@ export default function Receiving() {
                       return Math.abs(pct) >= 1 ? <span style={{ marginLeft: 6, fontSize: 12, fontWeight: 600, color: pct >= PRICE_ALERT_PCT ? 'var(--danger)' : pct > 0 ? 'var(--warn)' : 'var(--ok)' }}>{pct > 0 ? '+' : ''}{pct.toFixed(0)}%</span> : null
                     })()}
                   </td>}
-                  <td><button className="icon-btn danger write-btn" onClick={() => setLines(lines.length > 1 ? lines.filter((_, idx) => idx !== i) : lines)}><Trash2 size={16} /></button></td>
+                  <td className="line-del"><button className="icon-btn danger write-btn" onClick={() => setLines(lines.length > 1 ? lines.filter((_, idx) => idx !== i) : lines)}><Trash2 size={16} /></button></td>
                 </tr>
               )
             })}
