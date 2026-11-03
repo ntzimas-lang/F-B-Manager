@@ -18,7 +18,7 @@ export default function Stores() {
   const [show, setShow] = useState(false)
   const [editing, setEditing] = useState(null)
   const [users, setUsers] = useState([])
-  const [addFor, setAddFor] = useState(null) // store id | 'admin'
+  const [adding, setAdding] = useState(false)
 
   async function loadUsers() {
     if (!isAdminRole) return
@@ -29,8 +29,6 @@ export default function Stores() {
 
   const ROLE = { super_user: t('superUser'), owner: t('owner'), store_manager: t('storeManager'), shift_manager: t('shiftManager'), accounting: t('accounting') }
   const visibleStores = isAdminRole ? stores : stores.filter(s => s.id === profile?.store_id)
-  const storeIds = new Set(stores.map(s => s.id))
-  const adminUsers = users.filter(u => !(u.store_id && storeIds.has(u.store_id) && ['store_manager', 'shift_manager'].includes(u.role)))
 
   async function remove(id) {
     if (!confirm(t('confirmDelete'))) return
@@ -46,59 +44,54 @@ export default function Stores() {
     loadUsers()
   }
 
-  const person = (u) => (
-    <div key={u.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderTop: '1px solid var(--olive-100, #e5e8d8)' }}>
-      <span>{u.email} <span className="badge">{ROLE[u.role] || u.role}</span></span>
-      {u.id !== profile?.id && <button className="icon-btn danger" onClick={() => delUser(u)}><Trash2 size={16} /></button>}
-    </div>
-  )
+  const scoped = ['store_manager', 'shift_manager']
 
   return (
     <div>
       <div className="topbar" style={{ marginBottom: 16 }}>
         <h1>{t('settings')}</h1>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          {maxStores < 9999 && <span style={{ fontSize: 13 }}>{stores.length} / {maxStores}</span>}
+      </div>
+
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+          <h2 style={{ margin: 0 }}>{t('stores')} {maxStores < 9999 && <span style={{ fontSize: 13, fontWeight: 400 }}>({stores.length} / {maxStores})</span>}</h2>
           {canCreate && <button className="btn write-btn" onClick={() => { setEditing(null); setShow(true) }} disabled={limitReached}><Plus size={16} /> {t('newStore')}</button>}
         </div>
-      </div>
-      {limitReached && <div className="card" style={{ marginBottom: 16, background: 'var(--olive-50)' }}>{t('storeLimitReached')}</div>}
-      {loading && <p>{t('loading')}</p>}
-      {!loading && visibleStores.length === 0 && <div className="card">{t('noStores')}</div>}
-
-      {visibleStores.map(s => {
-        const people = users.filter(u => u.store_id === s.id && ['store_manager', 'shift_manager'].includes(u.role))
-        return (
-          <div className="card" key={s.id} style={{ marginBottom: 16 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-              <div><h2 style={{ margin: 0 }}>{s.name}</h2><span style={{ fontSize: 13, color: '#6b6b5f' }}>{[s.code, s.address].filter(Boolean).join(' · ')}</span></div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button className="icon-btn write-btn" onClick={() => { setEditing(s); setShow(true) }}><Pencil size={16} /></button>
-                {isPlatformAdmin && <button className="icon-btn danger write-btn" onClick={() => remove(s.id)}><Trash2 size={16} /></button>}
-              </div>
-            </div>
-            {isAdminRole && (
-              <div style={{ marginTop: 12 }}>
-                {people.map(person)}
-                {addFor === s.id
-                  ? <AddPerson roles={['store_manager', 'shift_manager']} storeId={s.id} ROLE={ROLE} onClose={() => setAddFor(null)} onDone={() => { setAddFor(null); loadUsers() }} />
-                  : <button className="btn btn-outline" style={{ marginTop: 8 }} onClick={() => setAddFor(s.id)}><UserPlus size={16} /> {t('addPerson')}</button>}
-              </div>
-            )}
+        {limitReached && <p style={{ margin: '0 0 8px', fontSize: 13 }}>{t('storeLimitReached')}</p>}
+        {loading && <p>{t('loading')}</p>}
+        {!loading && visibleStores.length === 0 && <p>{t('noStores')}</p>}
+        {visibleStores.map(s => (
+          <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderTop: '1px solid var(--olive-100, #e5e8d8)' }}>
+            <span><b>{s.name}</b> <span style={{ fontSize: 13, color: '#6b6b5f' }}>{[s.code, s.address].filter(Boolean).join(' · ')}</span></span>
+            <span style={{ display: 'flex', gap: 8 }}>
+              <button className="icon-btn write-btn" onClick={() => { setEditing(s); setShow(true) }}><Pencil size={16} /></button>
+              {isPlatformAdmin && <button className="icon-btn danger write-btn" onClick={() => remove(s.id)}><Trash2 size={16} /></button>}
+            </span>
           </div>
-        )
-      })}
+        ))}
+      </div>
 
       {isAdminRole && (
         <div className="card">
-          <h2 style={{ margin: 0 }}>{t('management')}</h2>
-          <span style={{ fontSize: 13, color: '#6b6b5f' }}>{t('managementHint')}</span>
-          <div style={{ marginTop: 12 }}>
-            {adminUsers.map(person)}
-            {addFor === 'admin'
-              ? <AddPerson roles={['owner', 'accounting']} storeId={null} ROLE={ROLE} onClose={() => setAddFor(null)} onDone={() => { setAddFor(null); loadUsers() }} />
-              : <button className="btn btn-outline" style={{ marginTop: 8 }} onClick={() => setAddFor('admin')}><UserPlus size={16} /> {t('addPerson')}</button>}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <h2 style={{ margin: 0 }}>{t('people')}</h2>
+            {!adding && <button className="btn" onClick={() => setAdding(true)}><UserPlus size={16} /> {t('addPerson')}</button>}
           </div>
+          {adding && <AddPerson stores={stores} ROLE={ROLE} onClose={() => setAdding(false)} onDone={() => { setAdding(false); loadUsers() }} />}
+          <table>
+            <thead><tr><th>Email</th><th>{t('role')}</th><th>{t('store')}</th><th></th></tr></thead>
+            <tbody>
+              {users.map(u => (
+                <tr key={u.id}>
+                  <td>{u.email}</td>
+                  <td>{ROLE[u.role] || u.role}</td>
+                  <td>{scoped.includes(u.role) ? (stores.find(x => x.id === u.store_id)?.name || '—') : t('all')}</td>
+                  <td>{u.id !== profile?.id && <button className="icon-btn danger" onClick={() => delUser(u)}><Trash2 size={16} /></button>}</td>
+                </tr>
+              ))}
+              {users.length === 0 && <tr><td colSpan={4}>{t('noUsers')}</td></tr>}
+            </tbody>
+          </table>
         </div>
       )}
       {show && <StoreFormModal store={editing} onClose={() => setShow(false)} onSaved={() => window.location.reload()} />}
@@ -106,30 +99,37 @@ export default function Stores() {
   )
 }
 
-function AddPerson({ roles, storeId, ROLE, onClose, onDone }) {
+function AddPerson({ stores, ROLE, onClose, onDone }) {
   const { t } = useLanguage()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [role, setRole] = useState(roles[0])
+  const [role, setRole] = useState('shift_manager')
+  const [storeId, setStoreId] = useState(stores[0]?.id || '')
   const [msg, setMsg] = useState('')
   const [busy, setBusy] = useState(false)
+  const needsStore = role === 'store_manager' || role === 'shift_manager'
   async function submit() {
     setMsg('')
-    if (!email || password.length < 6) { setMsg(t('userFormHint2')); return }
+    if (!email || password.length < 6 || (needsStore && !storeId)) { setMsg(t('userFormHint2')); return }
     setBusy(true)
-    const r = await createUser({ email: email.trim(), password, role, storeId })
+    const r = await createUser({ email: email.trim(), password, role, storeId: needsStore ? storeId : null })
     setBusy(false)
     if (r.error) { setMsg(r.error); return }
     onDone()
   }
   return (
-    <div style={{ marginTop: 8, padding: 12, background: 'var(--olive-50, #f4f5ec)', borderRadius: 10 }}>
+    <div style={{ marginBottom: 12, padding: 12, background: 'var(--olive-50, #f4f5ec)', borderRadius: 10 }}>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
         <input placeholder={t('password')} value={password} onChange={e => setPassword(e.target.value)} />
         <select value={role} onChange={e => setRole(e.target.value)}>
-          {roles.map(r => <option key={r} value={r}>{ROLE[r]}</option>)}
+          {['shift_manager', 'store_manager', 'accounting', 'owner'].map(r => <option key={r} value={r}>{ROLE[r]}</option>)}
         </select>
+        {needsStore && (
+          <select value={storeId} onChange={e => setStoreId(e.target.value)}>
+            {stores.map(st => <option key={st.id} value={st.id}>{st.name}</option>)}
+          </select>
+        )}
         <button className="btn" onClick={submit} disabled={busy}>{busy ? t('saving') : t('add')}</button>
         <button className="btn btn-outline" onClick={onClose}>{t('cancel')}</button>
       </div>
