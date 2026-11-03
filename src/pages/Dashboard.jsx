@@ -4,7 +4,7 @@ import { useStores } from '../context/StoreContext'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import { Download } from 'lucide-react'
-import { priceIncreases } from '../lib/prices'
+import { priceChanges } from '../lib/prices'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { notoSansBase64 } from '../assets/notoSansFont'
@@ -55,8 +55,8 @@ export default function Dashboard() {
         .not('unit_price', 'is', null).gte('goods_receipts.receipt_date', since)
       const recent = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10)
       setPriceAlerts(
-        priceIncreases((priceRows || []).map(r => ({ ingredient_id: r.ingredient_id, unit_price: r.unit_price, date: r.goods_receipts.receipt_date })))
-          .filter(a => a.date >= recent).slice(0, 8)
+        priceChanges((priceRows || []).map(r => ({ ingredient_id: r.ingredient_id, unit_price: r.unit_price, date: r.goods_receipts.receipt_date })))
+          .filter(a => a.date >= recent).slice(0, 10)
           .map(a => ({ ...a, name: (ingredients || []).find(i => i.id === a.ingredient_id)?.name || '' }))
       )
 
@@ -217,16 +217,19 @@ export default function Dashboard() {
         {hasFeature('staff') && <div className="card"><div className="stat-label">{t('totalEmployees')}</div><div className="stat-value">{stats.employees}</div></div>}
       </div>
 
-      {hasFeature('receiving') && priceAlerts.length > 0 && (
-        <div className="card" style={{ marginBottom: 20, borderColor: 'var(--danger)' }}>
-          <h2 style={{ marginTop: 0, color: 'var(--danger)' }}>{t('priceIncreases')}</h2>
+      {hasFeature('receiving') && !hideCosts && priceAlerts.length > 0 && (
+        <div className="card" style={{ marginBottom: 20 }}>
+          <h2 style={{ marginTop: 0 }}>{t('priceMoves')}</h2>
           <table>
-            <thead><tr><th>{t('ingredient')}</th><th>{t('previousPrice')}</th><th>{t('newPrice')}</th><th></th></tr></thead>
+            <thead><tr><th>{t('ingredient')}</th><th>{t('previousPrice')}</th><th>{t('newPrice')}</th><th></th><th>{t('range90')}</th></tr></thead>
             <tbody>
               {priceAlerts.map(a => (
                 <tr key={a.ingredient_id}>
-                  <td>{a.name}</td><td>{a.prev.toFixed(3)} €</td><td>{a.last.toFixed(3)} €</td>
-                  <td><span className="badge badge-danger">+{a.pct.toFixed(0)}%</span></td>
+                  <td>{a.name}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{a.prev.toFixed(3)} €</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{a.last.toFixed(3)} €</td>
+                  <td><span className={`badge ${a.pct >= 10 ? 'badge-danger' : a.pct > 0 ? 'badge-warn' : 'badge-ok'}`}>{a.pct > 0 ? '▲ +' : '▼ '}{a.pct.toFixed(0)}%</span></td>
+                  <td style={{ whiteSpace: 'nowrap', fontSize: 12 }}>{a.min.toFixed(3)} – {a.max.toFixed(3)} € ({a.count})</td>
                 </tr>
               ))}
             </tbody>
