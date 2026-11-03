@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { Html5Qrcode } from 'html5-qrcode'
 import { supabase } from '../lib/supabase'
 import { logActivity } from '../lib/activity'
@@ -19,6 +19,7 @@ export default function Receiving() {
   const [ingredients, setIngredients] = useState([])
   const [suppliers, setSuppliers] = useState([])
   const [history, setHistory] = useState([])
+  const [openRec, setOpenRec] = useState(null)
   const [invoiceRef, setInvoiceRef] = useState('')
   const [invoiceNumber, setInvoiceNumber] = useState('')
   const [supplierId, setSupplierId] = useState('')
@@ -45,7 +46,7 @@ export default function Receiving() {
     setSuppliers(sup || [])
     if (activeStoreId) {
       const { data } = await supabase.from('goods_receipts').select('*, goods_receipt_items(*)')
-        .eq('store_id', activeStoreId).order('created_at', { ascending: false }).limit(20)
+        .eq('store_id', activeStoreId).order('created_at', { ascending: false }).limit(100)
       setHistory(data || [])
     }
   }
@@ -348,16 +349,42 @@ export default function Receiving() {
         <div className="card" style={{ marginTop: 20 }}>
           <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}><h2 style={{ marginTop: 0 }}>{t('receiptHistory')}</h2><button className="btn btn-outline export-btn" onClick={exportReceipts}><Download size={16}/> {t('exportExcel')}</button></div>
           <table>
-            <thead><tr><th>{t('date')}</th><th>{t('invoiceNumber')}</th><th>{t('supplier')}</th><th>{t('products')}</th></tr></thead>
+            <thead><tr><th>{t('date')}</th><th>{t('invoiceNumber')}</th><th>{t('supplier')}</th><th>{t('products')}</th>{!hideCosts && <th>{t('total')}</th>}</tr></thead>
             <tbody>
-              {history.map(r => (
-                <tr key={r.id}>
-                  <td>{r.receipt_date}</td>
-                  <td>{r.invoice_number || <a href={/^https?:/.test(r.invoice_ref) ? r.invoice_ref : undefined} target="_blank" rel="noreferrer">{r.invoice_ref.slice(0, 30)}…</a>}</td>
-                  <td>{suppliers.find(s => s.id === r.supplier_id)?.name || '-'}</td>
-                  <td>{(r.goods_receipt_items || []).length}</td>
-                </tr>
-              ))}
+              {history.map(r => {
+                const items = r.goods_receipt_items || []
+                const total = items.reduce((a, it) => a + Number(it.quantity) * Number(it.unit_price || 0), 0)
+                return (
+                  <Fragment key={r.id}>
+                    <tr onClick={() => setOpenRec(openRec === r.id ? null : r.id)} style={{ cursor: 'pointer' }}>
+                      <td>{r.receipt_date}</td>
+                      <td>{r.invoice_number || (r.invoice_ref || '').replace(/^MANUAL:/, '').slice(0, 30) || '—'}</td>
+                      <td>{suppliers.find(s => s.id === r.supplier_id)?.name || '-'}</td>
+                      <td>{items.length} {openRec === r.id ? '▾' : '▸'}</td>
+                      {!hideCosts && <td style={{ whiteSpace: 'nowrap' }}>{total.toFixed(2)} €</td>}
+                    </tr>
+                    {openRec === r.id && (
+                      <tr><td colSpan={hideCosts ? 4 : 5} style={{ background: 'var(--olive-50, #f4f5ec)' }}>
+                        <table>
+                          <thead><tr><th>{t('ingredient')}</th><th>{t('quantity')}</th>{!hideCosts && <><th>{t('unitPrice')}</th><th>{t('total')}</th></>}</tr></thead>
+                          <tbody>
+                            {items.map(it => {
+                              const ing = ingredients.find(i => i.id === it.ingredient_id)
+                              return (
+                                <tr key={it.id}>
+                                  <td>{ing?.name || '—'}</td>
+                                  <td>{Number(it.quantity)} {ing?.unit}</td>
+                                  {!hideCosts && <><td style={{ whiteSpace: 'nowrap' }}>{Number(it.unit_price || 0).toFixed(3)} €</td><td style={{ whiteSpace: 'nowrap' }}>{(Number(it.quantity) * Number(it.unit_price || 0)).toFixed(2)} €</td></>}
+                                </tr>
+                              )
+                            })}
+                          </tbody>
+                        </table>
+                      </td></tr>
+                    )}
+                  </Fragment>
+                )
+              })}
             </tbody>
           </table>
         </div>
