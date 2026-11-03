@@ -71,7 +71,7 @@ export default function Layout() {
         {true && <div className="nav-group-label">{lang === 'el' ? 'Διαχείριση' : 'Management'}</div>}
         {hasFeature('staff') && (
           <NavLink to="/staff" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
-            <Users size={18} /> {t('staff')}
+            <Settings size={18} /> {t('staff')}
           </NavLink>
         )}
         {hasFeature('activity') && (
@@ -81,10 +81,10 @@ export default function Layout() {
         )}
         {isPlatformAdmin && (
           <NavLink to="/companies" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
-            <Users size={18} /> {t('controlCenter')}
+            <Users size={18} /> {t('settings')}
           </NavLink>
         )}
-        {(isPlatformAdmin || ['super_user', 'owner', 'store_manager'].includes(role)) && (
+        {(!isPlatformAdmin && ['super_user', 'owner', 'store_manager'].includes(role)) && (
           <NavLink to="/admin" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
             <Settings size={18} /> {t('settings')}
           </NavLink>

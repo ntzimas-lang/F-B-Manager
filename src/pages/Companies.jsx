@@ -56,7 +56,7 @@ export default function Companies() {
 
   return (
     <div>
-      <div className="topbar" style={{ marginBottom: 16 }}><h1>{t('controlCenter')}</h1></div>
+      <div className="topbar" style={{ marginBottom: 16 }}><h1>{t('settings')}</h1></div>
       <div className="card" style={{ marginBottom: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <input placeholder={t('name')} value={name} onChange={e => setName(e.target.value)} />
         <select value={plan} onChange={e => setPlan(e.target.value)}>
