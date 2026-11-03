@@ -70,8 +70,8 @@ export default function Ingredients() {
               <tr key={ing.id}>
                 <td>{ing.name}</td>
                 <td>{ing.category || '-'}</td>
-                <td>{ing.unit}</td>
-                {!hideCosts && <td>{Number(ing.current_price).toFixed(3)} €</td>}
+                <td style={{textTransform:'uppercase'}}>{ing.unit}</td>
+                {!hideCosts && <td style={{whiteSpace:'nowrap'}}>{Number(ing.current_price).toFixed(3)} €</td>}
                 <td>{suppliers.find(s => s.id === ing.supplier_id)?.name || '-'}</td>
                 <td style={{display:'flex', gap:8}}>
                   {!hideCosts && <button className="icon-btn" title={t('priceHistory')} onClick={() => setHistoryIng(ing)}><LineChart size={16}/></button>}
