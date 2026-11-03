@@ -67,7 +67,7 @@ export const translations = {
     // Activity / Users
     user: 'Χρήστης', action: 'Ενέργεια', type: 'Τύπος', item: 'Στοιχείο', created: 'Δημιουργία',
     updated: 'Ενημέρωση', deleted: 'Διαγραφή', noActivity: 'Δεν υπάρχει ακόμα δραστηριότητα.',
-    superUser: 'Super User', storeManager: 'Υπεύθυνος Καταστήματος', shiftManager: 'Υπεύθυνος Βάρδιας', accounting: 'Λογιστήριο',
+    superUser: 'Super User', owner: 'Ιδιοκτήτης', storeManager: 'Υπεύθυνος Καταστήματος', shiftManager: 'Υπεύθυνος Βάρδιας', accounting: 'Λογιστήριο',
     // Costing
     highCostDishes: 'Πιάτα με Υψηλό Κόστος (>35%)', noComposition: 'Χωρίς Συνταγή', alerts: 'Ειδοποιήσεις',
     noRecipeText: 'δεν έχει καταχωρημένη σύνθεση', lowMarginText: 'χαμηλό περιθώριο', dishAnalysis: 'Ανάλυση Πιάτων',
@@ -84,7 +84,7 @@ export const translations = {
     allActions: 'Όλες οι ενέργειες', creates: 'Δημιουργίες', updates: 'Ενημερώσεις', deletes: 'Διαγραφές', dateTime: 'Ημ/νία & Ώρα',
     // Users
     newUserNote: 'Για να προσθέσεις νέο χρήστη (email + κωδικός), αυτό γίνεται ακόμα από το Supabase: Authentication → Users → Add user (με "Auto Confirm User" ενεργό). Μόλις δημιουργηθεί, θα εμφανιστεί αυτόματα εδώ και θα μπορείς να του ορίσεις ρόλο και κατάστημα.',
-    superUserOnly: 'Αυτή η σελίδα είναι διαθέσιμη μόνο σε χρήστες με ρόλο Super User.', selectStore: 'Επιλογή καταστήματος...',
+    superUserOnly: 'Αυτή η σελίδα είναι διαθέσιμη μόνο στον Ιδιοκτήτη.', selectStore: 'Επιλογή καταστήματος...',
     languageLabel: 'Γλώσσα',
     currentStockTitle: 'Τρέχον Απόθεμα', sufficientBadge: 'Επαρκές', lowBadge: 'Χαμηλό', thresholdWord: 'όριο',
     lowStockAlertTitle: 'Χαμηλό Απόθεμα',
@@ -160,7 +160,7 @@ export const translations = {
     noEmployees: 'No staff yet.',
     user: 'User', action: 'Action', type: 'Type', item: 'Item', created: 'Created',
     updated: 'Updated', deleted: 'Deleted', noActivity: 'No activity yet.',
-    superUser: 'Super User', storeManager: 'Store Manager', shiftManager: 'Shift Manager', accounting: 'Accounting',
+    superUser: 'Super User', owner: 'Owner', storeManager: 'Store Manager', shiftManager: 'Shift Manager', accounting: 'Accounting',
     highCostDishes: 'High-Cost Dishes (>35%)', noComposition: 'No Recipe', alerts: 'Alerts',
     noRecipeText: 'has no recipe composition entered', lowMarginText: 'low margin', dishAnalysis: 'Dish Analysis',
     sortByCostPct: 'Sort: Food Cost %', sortByMargin: 'Sort: Margin', sortByName: 'Sort: Name',
@@ -171,7 +171,7 @@ export const translations = {
     payrollTotal: 'Total Payroll', exportCsv: 'Export CSV', noShifts: 'No entries yet.',
     allActions: 'All actions', creates: 'Creates', updates: 'Updates', deletes: 'Deletes', dateTime: 'Date & Time',
     newUserNote: 'To add a new user (email + password), this is still done from Supabase: Authentication → Users → Add user (with "Auto Confirm User" on). Once created, they will appear here automatically and you can set their role and store.',
-    superUserOnly: 'This page is only available to Super User accounts.', selectStore: 'Select a store...',
+    superUserOnly: 'This page is only available to the Owner.', selectStore: 'Select a store...',
     languageLabel: 'Language',
     currentStockTitle: 'Current Stock', sufficientBadge: 'Sufficient', lowBadge: 'Low', thresholdWord: 'threshold',
     lowStockAlertTitle: 'Low Stock Alert',

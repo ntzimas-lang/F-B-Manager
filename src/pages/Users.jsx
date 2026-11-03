@@ -14,6 +14,7 @@ export default function Users() {
   const { t } = useLanguage()
   const ROLE_LABELS = {
     super_user: t('superUser'),
+    owner: t('owner'),
     store_manager: t('storeManager'),
     shift_manager: t('shiftManager'),
     accounting: t('accounting'),
@@ -80,7 +81,7 @@ export default function Users() {
     setSavingId(null)
   }
 
-  if (myProfile?.role !== 'super_user' && !isPlatformAdmin) {
+  if (!['super_user', 'owner'].includes(myProfile?.role) && !isPlatformAdmin) {
     return <div className="card">{t('superUserOnly')}</div>
   }
 
@@ -96,7 +97,7 @@ export default function Users() {
           <input placeholder="Email" value={nEmail} onChange={e => setNEmail(e.target.value)} />
           <input placeholder={t('password')} value={nPass} onChange={e => setNPass(e.target.value)} />
           <select value={nRole} onChange={e => setNRole(e.target.value)}>
-            {Object.entries(ROLE_LABELS).map(([val, label]) => <option key={val} value={val}>{label}</option>)}
+            {Object.entries(ROLE_LABELS).filter(([val]) => val !== 'super_user' || isPlatformAdmin).map(([val, label]) => <option key={val} value={val}>{label}</option>)}
           </select>
           {nRole === 'store_manager' && (
             <select value={nStore} onChange={e => setNStore(e.target.value)}>
@@ -120,10 +121,10 @@ export default function Users() {
                   <td>
                     <select
                       value={u.role}
-                      disabled={savingId === u.id}
+                      disabled={savingId === u.id || (u.role === 'super_user' && !isPlatformAdmin)}
                       onChange={(e) => updateField(u, 'role', e.target.value)}
                     >
-                      {Object.entries(ROLE_LABELS).map(([val, label]) => (
+                      {Object.entries(ROLE_LABELS).filter(([val]) => val !== 'super_user' || isPlatformAdmin || u.role === 'super_user').map(([val, label]) => (
                         <option key={val} value={val}>{label}</option>
                       ))}
                     </select>
@@ -139,7 +140,7 @@ export default function Users() {
                         {stores.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                       </select>
                     ) : (
-                      <span style={{ color: '#8a8a7a' }}>{u.role === 'super_user' ? t('all') : '—'}</span>
+                      <span style={{ color: '#8a8a7a' }}>{['super_user', 'owner'].includes(u.role) ? t('all') : '—'}</span>
                     )}
                   </td>
                   {isPlatformAdmin && (

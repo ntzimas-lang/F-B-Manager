@@ -12,7 +12,7 @@ export default function Admin() {
 
   const tabs = [
     hasFeature('stores') && { key: 'stores', label: t('stores'), el: <Stores /> },
-    (profile?.role === 'super_user' || isPlatformAdmin) && { key: 'users', label: t('users'), el: <Users /> },
+    (['super_user', 'owner'].includes(profile?.role) || isPlatformAdmin) && { key: 'users', label: t('users'), el: <Users /> },
     isPlatformAdmin && { key: 'companies', label: t('companies'), el: <Companies /> },
   ].filter(Boolean)
 

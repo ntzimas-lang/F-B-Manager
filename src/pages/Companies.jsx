@@ -47,7 +47,7 @@ export default function Companies() {
     // το profile δημιουργείται αυτόματα· το συνδέουμε με την εταιρεία
     let ok = false
     for (let i = 0; i < 5 && !ok; i++) {
-      const { data: upd } = await supabase.from('profiles').update({ company_id: uCompany, role: 'super_user' }).eq('id', data.user.id).select()
+      const { data: upd } = await supabase.from('profiles').update({ company_id: uCompany, role: 'owner' }).eq('id', data.user.id).select()
       ok = !!upd?.length
       if (!ok) await new Promise(r => setTimeout(r, 500))
     }
