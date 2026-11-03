@@ -267,9 +267,9 @@ export default function Receiving() {
       </div>
 
       {selectedStoreId === 'all' && (
-        <div className="card" style={{ marginBottom: 16, background: 'var(--olive-50)' }}>{t('pickStoreNotice')}</div>
+        <div className="card" style={{ background: 'var(--olive-50)' }}>{t('receivingPickStore')}</div>
       )}
-
+      {selectedStoreId !== 'all' && (<>
       <div className="card write-btn">
         <h2 style={{ marginTop: 0 }}>{t('newReceipt')} — {store?.name}</h2>
 
@@ -362,6 +362,7 @@ export default function Receiving() {
           </table>
         </div>
       )}
+    </>)}
     </div>
   )
 }
