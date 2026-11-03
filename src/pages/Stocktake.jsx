@@ -1,3 +1,4 @@
+import { CATEGORIES } from '../lib/categories'
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { logActivity } from '../lib/activity'
@@ -16,6 +17,9 @@ export default function Stocktake() {
 
   const [month, setMonth] = useState(new Date().toISOString().slice(0,7))
   const [ingredients, setIngredients] = useState([])
+  const [suppliers, setSuppliers] = useState([])
+  const [fCat, setFCat] = useState('')
+  const [fSup, setFSup] = useState('')
   const [stockMap, setStockMap] = useState({})
   const [counts, setCounts] = useState({})
   const [existing, setExisting] = useState(null)
@@ -32,6 +36,8 @@ export default function Stocktake() {
       supabase.from('stocktakes').select('*, stocktake_items(*)').eq('store_id', activeStoreId).order('month', { ascending: false }),
     ])
     setIngredients(ing || [])
+    const { data: supData } = await supabase.from('suppliers').select('id, name').order('name')
+    setSuppliers(supData || [])
     setStockMap(Object.fromEntries((stock || []).map(s => [s.ingredient_id, s.quantity])))
     setExisting(st || null)
     setPast(pastList || [])
@@ -73,14 +79,18 @@ export default function Stocktake() {
   }
 
   async function exportCSV(record) {
-    const rows = [[t('ingredient'), t('unit'), t('systemQty'), t('realQty'), t('variance'), t('unitPrice'), t('total')]]
+    const rows = [[t('ingredient'), t('category'), t('supplier'), t('unit'), t('systemQty'), t('realQty'), t('variance'), t('unitPrice'), t('total')]]
     record.stocktake_items.forEach(it => {
       const ing = ingredients.find(i => i.id === it.ingredient_id)
       const p = Number(ing?.current_price || 0)
-      rows.push([ing?.name || '', ing?.unit || '', Number(it.system_qty), Number(it.counted_qty), Number(it.variance), p, Math.round(Number(it.variance) * p * 100) / 100])
+      rows.push([ing?.name || '', ing?.category || '', suppliers.find(x => x.id === ing?.supplier_id)?.name || '', ing?.unit || '', Number(it.system_qty), Number(it.counted_qty), Number(it.variance), p, Math.round(Number(it.variance) * p * 100) / 100])
     })
     await exportXlsx(`stocktake-${store?.name || ''}-${record.month}`, [{ name: record.month, rows }])
   }
+
+  const shownIngredients = ingredients
+    .filter(i => (!fCat || (fCat === '__none' ? !i.category : i.category === fCat)) && (!fSup || i.supplier_id === fSup))
+    .sort((a, b) => (a.category || '~').localeCompare(b.category || '~') || a.name.localeCompare(b.name))
 
   if (!activeStoreId) return <div className="card">{t('addStoreFirst')}</div>
 
@@ -104,12 +114,23 @@ export default function Stocktake() {
 
       <div className="card">
         <h2 style={{marginTop:0}}>{t('stocktake')}</h2>
+                <div style={{display:'flex', gap:8, marginBottom:12, flexWrap:'wrap'}}>
+          <select value={fCat} onChange={e => setFCat(e.target.value)}>
+            <option value="">{t('category')}: {t('all')}</option>
+            {[...new Set([...CATEGORIES, ...ingredients.map(i => i.category)])].filter(Boolean).map(c => <option key={c} value={c}>{c}</option>)}
+            <option value="__none">{t('noCategory')}</option>
+          </select>
+          <select value={fSup} onChange={e => setFSup(e.target.value)}>
+            <option value="">{t('supplier')}: {t('all')}</option>
+            {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+        </div>
         {loading ? <p>{t('loading')}</p> : (
           <>
             <table>
-              <thead><tr><th>{t('ingredient')}</th><th>{t('systemQty')}</th><th>{t('realQty')}</th><th>{t('variance')}</th></tr></thead>
+              <thead><tr><th>{t('ingredient')}</th><th>{t('category')}</th><th>{t('supplier')}</th><th>{t('systemQty')}</th><th>{t('realQty')}</th><th>{t('variance')}</th></tr></thead>
               <tbody>
-                {ingredients.map(ing => {
+                {shownIngredients.map(ing => {
                   const sys = systemQty(ing.id)
                   const val = counts[ing.id]
                   const counted = val !== undefined && val !== '' ? Number(val) : sys
@@ -117,13 +138,15 @@ export default function Stocktake() {
                   return (
                     <tr key={ing.id}>
                       <td>{ing.name}</td>
+                      <td>{ing.category || '-'}</td>
+                      <td>{suppliers.find(x => x.id === ing.supplier_id)?.name || '-'}</td>
                       <td>{sys} {ing.unit}</td>
                       <td><input type="number" step="0.01" disabled={readOnly} style={{width:100}} placeholder={String(sys)} value={val ?? ''} onChange={e => setCounts({...counts, [ing.id]: e.target.value})} /></td>
                       <td>{diff !== 0 ? <span style={{color: diff < 0 ? 'var(--danger)' : 'var(--ok)', fontWeight:600}}>{diff > 0 ? '+' : ''}{diff.toFixed(2)}</span> : '—'}</td>
                     </tr>
                   )
                 })}
-                {ingredients.length === 0 && <tr><td colSpan={4}>{t('noIngredients')}</td></tr>}
+                {ingredients.length === 0 && <tr><td colSpan={6}>{t('noIngredients')}</td></tr>}
               </tbody>
             </table>
             {ingredients.length > 0 && <button className="btn write-btn" style={{marginTop:16}} onClick={saveStocktake}>{t('recordStocktake')}</button>}

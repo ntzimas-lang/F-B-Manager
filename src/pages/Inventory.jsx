@@ -1,3 +1,4 @@
+import { CATEGORIES } from '../lib/categories'
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { logActivity } from '../lib/activity'
@@ -13,6 +14,9 @@ export default function Inventory() {
   const [ingredients, setIngredients] = useState([])
   const [loading, setLoading] = useState(true)
   const [showMove, setShowMove] = useState(false)
+  const [suppliers, setSuppliers] = useState([])
+  const [fCat, setFCat] = useState('')
+  const [fSup, setFSup] = useState('')
 
   async function load() {
     setLoading(true)
@@ -24,19 +28,23 @@ export default function Inventory() {
     ])
     setStock(stockData || [])
     setIngredients(ingData || [])
+    const { data: supData } = await supabase.from('suppliers').select('id, name').order('name')
+    setSuppliers(supData || [])
     setLoading(false)
   }
   useEffect(() => { load() }, [selectedStoreId])
 
   async function exportStock() {
-    const rows = [[t('ingredients'), t('store'), t('quantity'), t('unit'), t('unitPrice'), t('total')]]
-    stock.forEach(s => {
+    const rows = [[t('ingredients'), t('category'), t('supplier'), t('store'), t('quantity'), t('unit'), t('unitPrice'), t('total')]]
+    shown.forEach(s => {
       const q = Number(s.quantity), p = Number(s.ingredients?.current_price || 0)
-      rows.push([s.ingredients?.name || '', s.stores?.name || '', q, s.ingredients?.unit || '', p, Math.round(q * p * 100) / 100])
+      rows.push([s.ingredients?.name || '', s.ingredients?.category || '', suppliers.find(x => x.id === s.ingredients?.supplier_id)?.name || '', s.stores?.name || '', q, s.ingredients?.unit || '', p, Math.round(q * p * 100) / 100])
     })
     await exportXlsx(`stock-${new Date().toISOString().slice(0, 10)}`, [{ name: t('stockSheet'), rows }])
   }
 
+  const shown = stock.filter(s => (!fCat || (fCat === '__none' ? !s.ingredients?.category : s.ingredients?.category === fCat)) && (!fSup || s.ingredients?.supplier_id === fSup))
+    .sort((a, b) => (a.ingredients?.category || '~').localeCompare(b.ingredients?.category || '~') || (a.ingredients?.name || '').localeCompare(b.ingredients?.name || ''))
   const lowStock = stock.filter(s => s.ingredients && s.quantity <= s.ingredients.min_stock_alert && s.ingredients.min_stock_alert > 0)
 
   return (
@@ -62,13 +70,26 @@ export default function Inventory() {
 
       <div className="card">
         <h2 style={{marginTop:0}}>{t('currentStockTitle')} {selectedStoreId==='all' ? `(${t('allStores')})` : ''}</h2>
+                <div style={{display:'flex', gap:8, marginBottom:12, flexWrap:'wrap'}}>
+          <select value={fCat} onChange={e => setFCat(e.target.value)}>
+            <option value="">{t('category')}: {t('all')}</option>
+            {[...new Set([...CATEGORIES, ...stock.map(s => s.ingredients?.category)])].filter(Boolean).map(c => <option key={c} value={c}>{c}</option>)}
+            <option value="__none">{t('noCategory')}</option>
+          </select>
+          <select value={fSup} onChange={e => setFSup(e.target.value)}>
+            <option value="">{t('supplier')}: {t('all')}</option>
+            {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+        </div>
         {loading ? <p>{t('loading')}</p> : (
           <table>
-            <thead><tr><th>{t('ingredients')}</th>{selectedStoreId==='all' && <th>{t('store')}</th>}<th>{t('quantity')}</th><th>{t('condition')}</th></tr></thead>
+            <thead><tr><th>{t('ingredients')}</th><th>{t('category')}</th><th>{t('supplier')}</th>{selectedStoreId==='all' && <th>{t('store')}</th>}<th>{t('quantity')}</th><th>{t('condition')}</th></tr></thead>
             <tbody>
-              {stock.map(s => (
+              {shown.map(s => (
                 <tr key={s.id}>
                   <td>{s.ingredients?.name}</td>
+                  <td>{s.ingredients?.category || '-'}</td>
+                  <td>{suppliers.find(x => x.id === s.ingredients?.supplier_id)?.name || '-'}</td>
                   {selectedStoreId==='all' && <td>{s.stores?.name}</td>}
                   <td>{s.quantity} {s.ingredients?.unit}</td>
                   <td>
@@ -78,7 +99,7 @@ export default function Inventory() {
                   </td>
                 </tr>
               ))}
-              {stock.length === 0 && <tr><td colSpan={4}>{t('noStock')}</td></tr>}
+              {stock.length === 0 && <tr><td colSpan={6}>{t('noStock')}</td></tr>}
             </tbody>
           </table>
         )}
