@@ -4,7 +4,8 @@ import { supabase } from '../lib/supabase'
 import { logActivity } from '../lib/activity'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
-import { Plus, Trash2, Pencil, X, Upload, LineChart } from 'lucide-react'
+import { Plus, Trash2, Pencil, X, Upload, LineChart, Tag } from 'lucide-react'
+import LabelsModal from './LabelsModal'
 import { readSheet } from 'read-excel-file/browser'
 
 export default function Ingredients() {
@@ -19,6 +20,7 @@ export default function Ingredients() {
   const [fCat, setFCat] = useState('')
   const [fSup, setFSup] = useState('')
   const [q, setQ] = useState('')
+  const [showLabels, setShowLabels] = useState(false)
 
   async function loadAll() {
     const [i, s] = await Promise.all([
@@ -39,8 +41,11 @@ export default function Ingredients() {
     loadAll()
   }
 
+  const shown = ingredients.filter(i => (!fCat || (fCat === '__none' ? !i.category : i.category === fCat)) && (!fSup || i.supplier_id === fSup) && (!q || (i.name + ' ' + (i.code || '')).toLowerCase().includes(q.toLowerCase())))
+
   return (
     <div>
+      {showLabels && <LabelsModal items={shown} onClose={() => setShowLabels(false)} />}
       <div className="topbar" style={{marginBottom: 16}}>
         <h1>{t('ingredients')}</h1>
       </div>
@@ -49,6 +54,7 @@ export default function Ingredients() {
         <div style={{display:'flex', justifyContent:'space-between', marginBottom:12}}>
           <h2 style={{margin:0}}>{t('ingredients')} ({ingredients.length})</h2>
           <div style={{display:'flex', gap:8}}>
+            <button className="btn btn-outline" onClick={() => setShowLabels(true)}><Tag size={16}/> {t('labels')}</button>
             <button className="btn btn-outline write-master" onClick={() => setShowImport(true)}><Upload size={16}/> {t('importExcel')}</button>
             <button className="btn write-master" onClick={() => { setEditIngredient(null); setShowForm(true) }}><Plus size={16}/> {t('newIngredient')}</button>
           </div>
@@ -68,7 +74,7 @@ export default function Ingredients() {
         <table>
           <thead><tr><th>{t('code')}</th><th>{t('name')}</th><th>{t('category')}</th><th>{t('unit')}</th>{!hideCosts && <th>{t('price')}</th>}<th>{t('supplier')}</th><th></th></tr></thead>
           <tbody>
-            {ingredients.filter(i => (!fCat || (fCat === '__none' ? !i.category : i.category === fCat)) && (!fSup || i.supplier_id === fSup) && (!q || (i.name + ' ' + (i.code || '')).toLowerCase().includes(q.toLowerCase()))).map(ing => (
+            {shown.map(ing => (
               <tr key={ing.id}>
                 <td style={{whiteSpace:'nowrap', color:'#6b6b5f'}}>{ing.code || '-'}</td>
                 <td>{ing.name}</td>

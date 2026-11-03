@@ -6,8 +6,9 @@ import { logActivity } from '../lib/activity'
 import { useStores } from '../context/StoreContext'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
-import { Download, ScanLine, Pencil, Trash2, X, Check } from 'lucide-react'
+import { Download, Tag, ScanLine, Pencil, Trash2, X, Check } from 'lucide-react'
 import { exportXlsx } from '../lib/exportExcel'
+import LabelsModal from './LabelsModal'
 
 // Δέχεται κόμμα και απλές πράξεις, π.χ. 12+6 ή 2,5*4
 function evalQty(v) {
@@ -48,6 +49,7 @@ export default function Stocktake() {
   const [scanMsg, setScanMsg] = useState('')
   const [linkIng, setLinkIng] = useState('')
   const [highlight, setHighlight] = useState('')
+  const [showLabels, setShowLabels] = useState(false)
   const scannerRef = useRef(null)
 
   async function load() {
@@ -167,6 +169,8 @@ export default function Stocktake() {
     await stopCamera()
     const found = barcodes.find(b => b.barcode === code)
     if (found) { setScan(null); focusItem(found.ingredient_id); return }
+    const byCode = ingredients.find(i => i.code && i.code === code)
+    if (byCode) { setScan(null); focusItem(byCode.id); return }
     setScan({ state: 'unknown', code })
   }
   function focusItem(id) {
@@ -253,6 +257,7 @@ export default function Stocktake() {
         )}
         <div style={{display:'flex', gap:8, marginBottom:12, flexWrap:'wrap'}}>
           {!readOnly && <button className="btn" onClick={openScan}><ScanLine size={16}/> {t('scanBtn')}</button>}
+          <button className="btn btn-outline" onClick={() => setShowLabels(true)}><Tag size={16}/> {t('labels')}</button>
           <input placeholder={t('search')} value={search} onChange={e => setSearch(e.target.value)} />
           <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
             <option value="category">{t('sortBy')}: {t('category')}</option>
@@ -301,6 +306,7 @@ export default function Stocktake() {
         )}
       </div>
 
+      {showLabels && <LabelsModal items={shownIngredients} onClose={() => setShowLabels(false)} />}
       {scan && (
         <div className="modal-overlay" onClick={closeScan}>
           <div className="modal" onClick={e => e.stopPropagation()}>
