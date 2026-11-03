@@ -51,6 +51,15 @@ function Gate() {
     )
   }
 
+  if (profile?.companies?.active === false && !isPlatformAdmin) {
+    return (
+      <div style={{ padding: 40, fontFamily: 'system-ui', maxWidth: 480 }}>
+        <p>{t('accountDisabled')}</p>
+        <button className="btn" onClick={signOut}>{t('logout')}</button>
+      </div>
+    )
+  }
+
   return (
     <StoreProvider>
       <BrowserRouter>

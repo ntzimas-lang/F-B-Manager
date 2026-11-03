@@ -44,6 +44,15 @@ export default function Companies() {
     update(c.id, { features: next })
   }
 
+  async function removeCompany(c) {
+    const typed = prompt(`${t('deleteCompanyWarn')}\n\n${t('typeNameToConfirm')}: ${c.name}`)
+    if (typed === null) return
+    if (typed.trim() !== c.name) { alert(t('nameMismatch')); return }
+    const { error } = await supabase.rpc('delete_company', { p_company: c.id })
+    if (error) alert(error.message)
+    load()
+  }
+
   async function update(id, patch) {
     await supabase.from('companies').update(patch).eq('id', id)
     load()
@@ -84,15 +93,15 @@ export default function Companies() {
             {companies.map(c => (
               <Fragment key={c.id}>
               <tr>
-                <td><input defaultValue={c.name} onBlur={e => e.target.value !== c.name && update(c.id, { name: e.target.value })} /></td>
+                <td style={c.active === false ? { opacity: 0.55 } : undefined}><input defaultValue={c.name} onBlur={e => e.target.value !== c.name && update(c.id, { name: e.target.value })} /></td>
                 <td>
                   <select value={c.plan} onChange={e => update(c.id, 'features' in c ? { plan: e.target.value, features: null } : { plan: e.target.value })}>
                     {PLANS.map(p => <option key={p} value={p}>{PLAN_LABEL[p]}</option>)}
                   </select>
                 </td>
-                <td>{profiles.filter(p => p.company_id === c.id).length}</td>
+                <td>{profiles.filter(p => p.company_id === c.id).length}{c.active === false && <span style={{ marginLeft: 8, fontSize: 12, color: 'var(--danger)' }}>{t('inactive')}</span>}</td>
                 <td>{'max_stores' in c && <input type="number" min="0" style={{ width: 70 }} defaultValue={c.max_stores} onBlur={e => Number(e.target.value) !== c.max_stores && update(c.id, { max_stores: Number(e.target.value) })} />}</td>
-                <td style={{ whiteSpace: 'nowrap' }}><button className="btn" onClick={() => setPanelId(panelId === c.id ? null : c.id)}>{t('manage')}</button> {'features' in c && <button className="btn btn-outline" onClick={() => setOpenId(openId === c.id ? null : c.id)}>{t('customizeModules')}{Array.isArray(c.features) ? ' *' : ''}</button>}</td>
+                <td style={{ whiteSpace: 'nowrap' }}><button className="btn" onClick={() => setPanelId(panelId === c.id ? null : c.id)}>{t('manage')}</button> {'active' in c && <button className="btn btn-outline" onClick={() => update(c.id, { active: c.active === false })}>{c.active === false ? t('activate') : t('deactivate')}</button>} {'features' in c && <button className="btn btn-outline" onClick={() => setOpenId(openId === c.id ? null : c.id)}>{t('customizeModules')}{Array.isArray(c.features) ? ' *' : ''}</button>} {c.id !== profile?.company_id && <button className="icon-btn danger" onClick={() => removeCompany(c)}><Trash2 size={16} /></button>}</td>
               </tr>
               {panelId === c.id && (
                 <tr><td colSpan={5} style={{ background: 'var(--olive-50, #f4f5ec)' }}><CompanyPanel companyId={c.id} maxStores={c.max_stores ?? 9999} onChanged={load} /></td></tr>

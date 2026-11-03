@@ -25,7 +25,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     async function loadProfile() {
       if (!session?.user) { setProfile(null); return }
-      let { data, error } = await supabase.from('profiles').select('*, companies(name, plan, features, max_stores)').eq('id', session.user.id).maybeSingle()
+      let { data, error } = await supabase.from('profiles').select('*, companies(name, plan, features, max_stores, active)').eq('id', session.user.id).maybeSingle()
       if (error) {
         const r = await supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle()
         data = r.data
