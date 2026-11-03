@@ -116,7 +116,7 @@ export default function Receiving() {
       cv.getContext('2d').drawImage(bmp, 0, 0, cv.width, cv.height)
       const image = cv.toDataURL('image/jpeg', 0.85).split(',')[1]
       const { data, error } = await supabase.functions.invoke('read-invoice', { body: { image, media_type: 'image/jpeg' } })
-      if (error || !data || data.error) { setImportMsg(data?.error === 'no_key' ? t('photoNoKey') : t('photoError')); return }
+      if (error || !data || data.error) { setImportMsg(data?.error === 'no_key' ? t('photoNoKey') : `${t('photoError')} (${data?.detail || data?.error || error?.message || ''})`); return }
       applyInvoice({
         supplierName: data.supplier_name, number: [data.series, data.number].filter(Boolean).join('-'),
         date: /^\d{4}-\d{2}-\d{2}$/.test(data.date || '') ? data.date : '', mark: data.mark || '',
@@ -125,7 +125,19 @@ export default function Receiving() {
           price: Math.round((Number(l.net_total) / Number(l.quantity)) * 10000) / 10000,
         })),
       })
-    } catch (e) { console.error(e); setImportMsg(t('photoError')) }
+    } catch (e) { console.error(e); setImportMsg(`${t('photoError')} (${e?.message || e})`) }
+  }
+  async function createIngredient(i) {
+    const l = lines[i]
+    const u = String(l.iunit || '').toLowerCase()
+    const unit = /^(κιλ|kg)/.test(u) ? 'kg' : /^(λιτ|lt|l$)/.test(u) ? 'lt' : 'τεμ'
+    const name = String(l.desc || '').replace(/\s+/g, ' ').trim()
+    const { data: ing, error } = await supabase.from('ingredients').insert({
+      name, unit, current_price: Number(l.unit_price) || 0, supplier_id: supplierId || null,
+    }).select().single()
+    if (error || !ing) { alert(error?.message || 'error'); return }
+    setIngredients(prev => [...prev, ing].sort((a, b) => a.name.localeCompare(b.name)))
+    setLine(i, { ingredient_id: ing.id })
   }
   function setFactor(i, v) {
     const l = lines[i], f = Number(v) > 0 ? Number(v) : 1
@@ -169,8 +181,13 @@ export default function Receiving() {
     if (!ref || valid.length === 0 || duplicate || !activeStoreId) return
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
+    let supId = supplierId
+    if (!supId && supName) {
+      const { data: ns } = await supabase.from('suppliers').insert({ name: supName }).select().single()
+      if (ns) { supId = ns.id; setSuppliers(prev => [...prev, ns]) }
+    }
     const { data: receipt, error } = await supabase.from('goods_receipts').insert({
-      store_id: activeStoreId, supplier_id: supplierId || null, invoice_ref: ref,
+      store_id: activeStoreId, supplier_id: supId || null, invoice_ref: ref,
       invoice_number: invoiceNumber || null, receipt_date: date, created_by: user?.email || null,
     }).select().single()
     if (error) { setSaving(false); alert(error.message); return }
@@ -291,6 +308,7 @@ export default function Receiving() {
                       <option value="">{t('selectOption')}</option>
                       {ingredients.map(x => <option key={x.id} value={x.id}>{x.name}</option>)}
                     </select>
+                    {l.code && !l.ingredient_id && <button type="button" className="btn btn-outline write-btn" style={{ marginTop: 4, padding: '2px 8px', fontSize: 12 }} onClick={() => createIngredient(i)}><Plus size={12} /> {t('createIngredient')}</button>}
                     {l.code && <div style={{ fontSize: 12, color: 'var(--text-muted, #666)', marginTop: 4 }}>
                       {l.desc} · {l.rawQty} {l.iunit} × <input type="number" step="0.01" min="0" style={{ width: 60 }} value={l.factor} onChange={e => setFactor(i, e.target.value)} />
                     </div>}
