@@ -1,3 +1,4 @@
+import { CATEGORIES } from '../lib/categories'
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { logActivity } from '../lib/activity'
@@ -15,6 +16,8 @@ export default function Ingredients() {
   const [editIngredient, setEditIngredient] = useState(null)
   const [showImport, setShowImport] = useState(false)
   const [historyIng, setHistoryIng] = useState(null)
+  const [fCat, setFCat] = useState('')
+  const [fSup, setFSup] = useState('')
 
   async function loadAll() {
     const [i, s] = await Promise.all([
@@ -49,12 +52,24 @@ export default function Ingredients() {
             <button className="btn write-master" onClick={() => { setEditIngredient(null); setShowForm(true) }}><Plus size={16}/> {t('newIngredient')}</button>
           </div>
         </div>
+        <div style={{display:'flex', gap:8, marginBottom:12, flexWrap:'wrap'}}>
+          <select value={fCat} onChange={e => setFCat(e.target.value)}>
+            <option value="">{t('category')}: {t('all')}</option>
+            {[...new Set([...CATEGORIES, ...ingredients.map(i => i.category).filter(Boolean)])].map(c => <option key={c} value={c}>{c}</option>)}
+            <option value="__none">{t('noCategory')}</option>
+          </select>
+          <select value={fSup} onChange={e => setFSup(e.target.value)}>
+            <option value="">{t('supplier')}: {t('all')}</option>
+            {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+        </div>
         <table>
-          <thead><tr><th>{t('name')}</th><th>{t('unit')}</th>{!hideCosts && <th>{t('price')}</th>}<th>{t('supplier')}</th><th></th></tr></thead>
+          <thead><tr><th>{t('name')}</th><th>{t('category')}</th><th>{t('unit')}</th>{!hideCosts && <th>{t('price')}</th>}<th>{t('supplier')}</th><th></th></tr></thead>
           <tbody>
-            {ingredients.map(ing => (
+            {ingredients.filter(i => (!fCat || (fCat === '__none' ? !i.category : i.category === fCat)) && (!fSup || i.supplier_id === fSup)).map(ing => (
               <tr key={ing.id}>
                 <td>{ing.name}</td>
+                <td>{ing.category || '-'}</td>
                 <td>{ing.unit}</td>
                 {!hideCosts && <td>{Number(ing.current_price).toFixed(3)} €</td>}
                 <td>{suppliers.find(s => s.id === ing.supplier_id)?.name || '-'}</td>
@@ -89,7 +104,7 @@ function IngredientFormModal({ suppliers, ingredient, onClose, onSaved }) {
   const [form, setForm] = useState({
     name: ingredient?.name || '', unit: ingredient?.unit || 'kg',
     current_price: ingredient?.current_price ?? '', supplier_id: ingredient?.supplier_id || '',
-    min_stock_alert: ingredient?.min_stock_alert ?? '',
+    min_stock_alert: ingredient?.min_stock_alert ?? '', category: ingredient?.category || '',
   })
   async function save() {
     if (!form.name) return
@@ -97,7 +112,7 @@ function IngredientFormModal({ suppliers, ingredient, onClose, onSaved }) {
       ...form,
       current_price: Number(form.current_price) || 0,
       min_stock_alert: Number(form.min_stock_alert) || 0,
-      supplier_id: form.supplier_id || null,
+      supplier_id: form.supplier_id || null, category: form.category || null,
     }
     if (isEdit) {
       await supabase.from('ingredients').update(payload).eq('id', ingredient.id)
@@ -113,6 +128,12 @@ function IngredientFormModal({ suppliers, ingredient, onClose, onSaved }) {
       <div className="modal" onClick={e => e.stopPropagation()}>
         <div style={{display:'flex', justifyContent:'space-between'}}><h2>{isEdit ? `${t('edit')} — ${ingredient.name}` : t('newIngredient')}</h2><button className="icon-btn" onClick={onClose}><X/></button></div>
         <div className="form-row"><label>{t('name')}</label><input value={form.name} onChange={e => setForm({...form, name:e.target.value})}/></div>
+        <div className="form-row"><label>{t('category')}</label>
+          <select value={form.category} onChange={e => setForm({...form, category:e.target.value})}>
+            <option value="">-</option>
+            {[...new Set([...CATEGORIES, form.category].filter(Boolean))].map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
         <div className="form-row"><label>{t('unit')}</label>
           <select value={form.unit} onChange={e => setForm({...form, unit:e.target.value})}>
             <option value="kg">kg</option><option value="gr">gr</option><option value="lt">lt</option>

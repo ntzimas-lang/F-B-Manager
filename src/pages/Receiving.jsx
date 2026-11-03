@@ -76,12 +76,17 @@ export default function Receiving() {
       })
   }, [invoiceRef, invoiceNumber, date, activeStoreId])
 
-  function applyInvoice(inv) {
+  async function applyInvoice(inv) {
     const key = (l) => l.code || l.description
     if (!inv.lines.length) { setImportMsg(t('pdfNoLines')); return }
     const sname = (inv.supplierName || '').trim()
     const sup = suppliers.find(s => sname && (s.name.toLowerCase().includes(sname.toLowerCase().slice(0, 8)) || sname.toLowerCase().includes(s.name.toLowerCase())))
-    if (sup) setSupplierId(sup.id)
+    let supIdNow = sup?.id || ''
+    if (!sup && sname) {
+      const { data: ns } = await supabase.from('suppliers').insert({ name: sname }).select().single()
+      if (ns) { supIdNow = ns.id; setSuppliers(prev => [...prev, ns]) }
+    }
+    if (supIdNow) setSupplierId(supIdNow)
     if (inv.number) setInvoiceNumber(inv.number)
     if (inv.date) setDate(inv.date)
     if (!invoiceRef.trim()) setInvoiceRef(inv.mark ? `MARK:${inv.mark}` : `${sname}:${inv.number}`)
@@ -92,7 +97,7 @@ export default function Receiving() {
       const f = m ? Number(m.factor) : (pack && /^(κιβ|πακ|συσκ|box)/i.test(l.unit || '') ? Number(pack[1]) : 1)
       return {
         ingredient_id: m?.ingredient_id || '', code: key(l), desc: l.description, iunit: l.unit,
-        rawQty: l.qty, rawPrice: l.price, factor: f,
+        rawQty: l.qty, rawPrice: l.price, factor: f, category: l.category || '',
         quantity: String(Math.round(l.qty * f * 1000) / 1000), unit_price: String(Math.round((l.price / f) * 10000) / 10000),
       }
     }))
@@ -105,7 +110,7 @@ export default function Receiving() {
     setImportMsg('')
     try {
       const { parseInvoicePdf } = await import('../lib/invoicePdf')
-      applyInvoice(await parseInvoicePdf(file))
+      await applyInvoice(await parseInvoicePdf(file))
     } catch (e) { console.error(e); setImportMsg(t('pdfError')) }
   }
 
@@ -120,11 +125,11 @@ export default function Receiving() {
       const image = cv.toDataURL('image/jpeg', 0.85).split(',')[1]
       const { data, error } = await supabase.functions.invoke('read-invoice', { body: { image, media_type: 'image/jpeg' } })
       if (error || !data || data.error) { setImportMsg(data?.error === 'no_key' ? t('photoNoKey') : `${t('photoError')} (${data?.detail || data?.error || error?.message || ''})`); return }
-      applyInvoice({
+      await applyInvoice({
         supplierName: data.supplier_name, number: [data.series, data.number].filter(Boolean).join('-'),
         date: /^\d{4}-\d{2}-\d{2}$/.test(data.date || '') ? data.date : '', mark: data.mark || '',
         lines: (data.lines || []).filter(l => Number(l.quantity) > 0).map(l => ({
-          code: l.code || '', description: l.description, unit: l.unit || '', qty: Number(l.quantity),
+          code: l.code || '', description: l.description, unit: l.unit || '', qty: Number(l.quantity), category: l.category || '',
           price: Math.round((Number(l.net_total) / Number(l.quantity)) * 10000) / 10000,
         })),
       })
@@ -136,7 +141,7 @@ export default function Receiving() {
     const unit = /^(κιλ|kg)/.test(u) ? 'kg' : /^(λιτ|lt|l$)/.test(u) ? 'lt' : 'τεμ'
     const name = String(l.desc || '').replace(/\s*\d+\s*\/\s*[ΧXχx][ΤT]\.?/i, '').replace(/\s+ΤΕΜ\.?$/i, '').replace(/\.$/, '').replace(/\s+/g, ' ').trim()
     const { data: ing, error } = await supabase.from('ingredients').insert({
-      name, unit, current_price: Number(l.unit_price) || 0, supplier_id: supplierId || null,
+      name, unit, current_price: Number(l.unit_price) || 0, supplier_id: supplierId || null, category: l.category || null,
     }).select().single()
     if (error || !ing) { alert(error?.message || 'error'); return }
     setIngredients(prev => [...prev, ing].sort((a, b) => a.name.localeCompare(b.name)))

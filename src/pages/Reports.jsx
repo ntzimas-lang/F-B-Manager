@@ -53,7 +53,7 @@ export default function Reports() {
   async function fetchPeriod(r, recipeCost) {
     const storeFilter = selectedStoreId !== 'all' ? selectedStoreId : null
     let salesQ = supabase.from('sales').select('date, sale_items(recipe_id, quantity, unit_price)').gte('date', r.start).lte('date', r.end)
-    let recQ = supabase.from('goods_receipt_items').select('quantity, unit_price, goods_receipts!inner(receipt_date, store_id, supplier_id)')
+    let recQ = supabase.from('goods_receipt_items').select('ingredient_id, quantity, unit_price, goods_receipts!inner(receipt_date, store_id, supplier_id)')
       .not('unit_price', 'is', null).gte('goods_receipts.receipt_date', r.start).lte('goods_receipts.receipt_date', r.end)
     let wasteQ = supabase.from('stock_movements').select('ingredient_id, quantity').eq('movement_type', 'waste')
       .gte('created_at', r.start + 'T00:00:00').lt('created_at', addDays(r.end, 1) + 'T00:00:00')
@@ -73,7 +73,7 @@ export default function Reports() {
       const [{ data: recipes }, { data: links }, { data: ings }] = await Promise.all([
         supabase.from('recipes').select('id, name'),
         supabase.from('recipe_ingredients').select('*'),
-        supabase.from('ingredients').select('id, current_price'),
+        supabase.from('ingredients').select('id, current_price, category'),
       ])
       const { data: sups } = await supabase.from('suppliers').select('id, name')
       const priceMap = Object.fromEntries((ings || []).map(i => [i.id, Number(i.current_price) || 0]))
@@ -82,7 +82,8 @@ export default function Reports() {
         recipeCost[r.id] = (links || []).filter(l => l.recipe_id === r.id).reduce((s, l) => s + (priceMap[l.ingredient_id] || 0) * Number(l.quantity), 0)
       }
       const [cur, prev] = await Promise.all([fetchPeriod(range, recipeCost), fetchPeriod(prevRange, recipeCost)])
-      setData({ cur, prev, recipes: recipes || [], priceMap, suppliers: sups || [] })
+      const catMap = Object.fromEntries((ings || []).map(i => [i.id, i.category || '']))
+      setData({ cur, prev, catMap, recipes: recipes || [], priceMap, suppliers: sups || [] })
       setLoading(false)
     }
     load()
@@ -103,14 +104,16 @@ export default function Reports() {
       }
     }
     const purchases = p.recs.reduce((a, r) => a + Number(r.quantity) * Number(r.unit_price), 0)
-    const bySupplier = {}
+    const bySupplier = {}, byCategory = {}
     for (const r of p.recs) {
+      const ck = data?.catMap?.[r.ingredient_id] || ''
+      byCategory[ck] = (byCategory[ck] || 0) + Number(r.quantity) * Number(r.unit_price)
       const k = r.goods_receipts?.supplier_id || 'none'
       const b = (bySupplier[k] ||= { total: 0, lines: 0 })
       b.total += Number(r.quantity) * Number(r.unit_price); b.lines += 1
     }
     const waste = p.waste.reduce((a, w) => a + Math.abs(Number(w.quantity)) * (data?.priceMap[w.ingredient_id] || 0), 0)
-    return { revenue, cost, margin: revenue - cost, foodCostPct: revenue > 0 ? (cost / revenue) * 100 : 0, portions, purchases, waste, byDish, byMonth, bySupplier }
+    return { revenue, cost, margin: revenue - cost, foodCostPct: revenue > 0 ? (cost / revenue) * 100 : 0, portions, purchases, waste, byDish, byMonth, bySupplier, byCategory }
   }
 
   const cur = useMemo(() => summarize(data?.cur), [data])
@@ -147,6 +150,7 @@ export default function Reports() {
     await exportXlsx(`results-${range.start}_${range.end}`, [
       { name: t('summary'), rows: [[t('summary'), ''], ...summary] },
       { name: t('byMonth'), rows: months }, { name: t('byDish'), rows: dishes }, { name: t('purchasesBySupplier'), rows: suppliers },
+      { name: t('purchasesByCategory'), rows: [[t('category'), t('purchases')], ...Object.entries(cur.byCategory).sort(([, a], [, b]) => b - a).map(([k, v]) => [k || '-', r2(v)])] },
     ])
   }
 
@@ -213,6 +217,18 @@ export default function Reports() {
                       <td>{v.revenue > 0 ? ((v.cost / v.revenue) * 100).toFixed(1) : '0.0'}%</td>
                     </tr>
                   ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {Object.keys(cur.byCategory).length > 0 && (
+            <div className="card" style={{ marginBottom: 16 }}>
+              <h2 style={{ marginTop: 0 }}>{t('purchasesByCategory')}</h2>
+              <table>
+                <thead><tr><th>{t('category')}</th><th>{t('purchases')}</th></tr></thead>
+                <tbody>
+                  {Object.entries(cur.byCategory).sort(([, a], [, b]) => b - a).map(([k, v]) => <tr key={k}><td>{k || '-'}</td><td>{fmt(v)} €</td></tr>)}
                 </tbody>
               </table>
             </div>
