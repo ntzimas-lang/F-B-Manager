@@ -12,7 +12,8 @@ import { PRICE_ALERT_PCT } from '../lib/prices'
 export default function Receiving() {
   const { stores, selectedStoreId } = useStores()
   const { t } = useLanguage()
-  const { hideCosts, readOnly } = useAuth()
+  const { hideCosts, readOnly, role } = useAuth()
+  const canDelete = ['super_user', 'owner', 'store_manager'].includes(role)
   const activeStoreId = selectedStoreId !== 'all' ? selectedStoreId : (stores[0]?.id || '')
   const store = stores.find(s => s.id === activeStoreId)
 
@@ -51,6 +52,21 @@ export default function Receiving() {
     }
   }
   useEffect(() => { load() }, [activeStoreId])
+
+  async function deleteReceipt(r) {
+    if (!confirm(t('confirmDeleteReceipt'))) return
+    const items = r.goods_receipt_items || []
+    for (const it of items) {
+      const { data: st } = await supabase.from('inventory_stock').select('*').eq('store_id', r.store_id).eq('ingredient_id', it.ingredient_id).maybeSingle()
+      if (st) await supabase.from('inventory_stock').update({ quantity: Math.max(0, Number(st.quantity) - Number(it.quantity)), updated_at: new Date().toISOString() }).eq('id', st.id)
+      await supabase.from('stock_movements').insert({ store_id: r.store_id, ingredient_id: it.ingredient_id, movement_type: 'adjustment', quantity: -Number(it.quantity), note: `${t('receiptDeleted')} ${r.invoice_number || ''}` })
+    }
+    await supabase.from('goods_receipt_items').delete().eq('receipt_id', r.id)
+    const { error } = await supabase.from('goods_receipts').delete().eq('id', r.id)
+    if (error) { alert(error.message); return }
+    await logActivity('delete', 'receipt', r.invoice_number || r.invoice_ref || '')
+    setOpenRec(null); load()
+  }
 
   async function exportReceipts() {
     const rows = [[t('date'), t('invoiceNumber'), t('supplier'), t('ingredient'), t('quantity'), t('unit'), t('unitPrice'), t('total')]]
@@ -349,7 +365,7 @@ export default function Receiving() {
         <div className="card" style={{ marginTop: 20 }}>
           <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}><h2 style={{ marginTop: 0 }}>{t('receiptHistory')}</h2><button className="btn btn-outline export-btn" onClick={exportReceipts}><Download size={16}/> {t('exportExcel')}</button></div>
           <table>
-            <thead><tr><th>{t('date')}</th><th>{t('invoiceNumber')}</th><th>{t('supplier')}</th><th>{t('products')}</th>{!hideCosts && <th>{t('total')}</th>}</tr></thead>
+            <thead><tr><th>{t('date')}</th><th>{t('invoiceNumber')}</th><th>{t('supplier')}</th><th>{t('products')}</th>{!hideCosts && <th>{t('total')}</th>}{canDelete && <th></th>}</tr></thead>
             <tbody>
               {history.map(r => {
                 const items = r.goods_receipt_items || []
@@ -362,9 +378,10 @@ export default function Receiving() {
                       <td>{suppliers.find(s => s.id === r.supplier_id)?.name || '-'}</td>
                       <td>{items.length} {openRec === r.id ? '▾' : '▸'}</td>
                       {!hideCosts && <td style={{ whiteSpace: 'nowrap' }}>{total.toFixed(2)} €</td>}
+                      {canDelete && <td><button className="icon-btn danger" title={t('delete')} onClick={e => { e.stopPropagation(); deleteReceipt(r) }}><Trash2 size={16} /></button></td>}
                     </tr>
                     {openRec === r.id && (
-                      <tr><td colSpan={hideCosts ? 4 : 5} style={{ background: 'var(--olive-50, #f4f5ec)' }}>
+                      <tr><td colSpan={(hideCosts ? 4 : 5) + (canDelete ? 1 : 0)} style={{ background: 'var(--olive-50, #f4f5ec)' }}>
                         <table>
                           <thead><tr><th>{t('ingredient')}</th><th>{t('quantity')}</th>{!hideCosts && <><th>{t('unitPrice')}</th><th>{t('total')}</th></>}</tr></thead>
                           <tbody>
