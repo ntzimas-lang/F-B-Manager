@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useStores } from '../context/StoreContext'
 import { useLanguage } from '../context/LanguageContext'
+import { useAuth } from '../context/AuthContext'
 import { Download } from 'lucide-react'
 import { priceIncreases } from '../lib/prices'
 import jsPDF from 'jspdf'
@@ -13,6 +14,8 @@ const OLIVE_RGB = [61, 74, 40] // #3d4a28
 export default function Dashboard() {
   const { stores } = useStores()
   const { t } = useLanguage()
+  const { hasFeature } = useAuth()
+  const [monthRevenue, setMonthRevenue] = useState(0)
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({
     recipes: 0, ingredients: 0, suppliers: 0, employees: 0,
@@ -47,7 +50,7 @@ export default function Dashboard() {
       ])
 
       const since = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10)
-      const { data: priceRows } = await supabase.from('goods_receipt_items')
+      const { data: priceRows } = !hasFeature('receiving') ? { data: [] } : await supabase.from('goods_receipt_items')
         .select('ingredient_id, unit_price, goods_receipts!inner(receipt_date)')
         .not('unit_price', 'is', null).gte('goods_receipts.receipt_date', since)
       const recent = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10)
@@ -56,6 +59,12 @@ export default function Dashboard() {
           .filter(a => a.date >= recent).slice(0, 8)
           .map(a => ({ ...a, name: (ingredients || []).find(i => i.id === a.ingredient_id)?.name || '' }))
       )
+
+      if (hasFeature('sales')) {
+        const first = new Date(); first.setDate(1)
+        const { data: ms } = await supabase.from('sales').select('sale_items(quantity, unit_price)').gte('date', first.toISOString().slice(0, 10))
+        setMonthRevenue((ms || []).reduce((a, sl) => a + (sl.sale_items || []).reduce((b, it) => b + Number(it.quantity) * Number(it.unit_price), 0), 0))
+      }
 
       const ingMap = Object.fromEntries((ingredients || []).map((i) => [i.id, i]))
       const costRows = (recipes || []).map((r) => {
@@ -121,22 +130,23 @@ export default function Dashboard() {
       head: [['Δείκτης', 'Τιμή']],
       body: [
         ['Καταστήματα', String(stores.length)],
-        ['Πιάτα Μενού', String(stats.recipes)],
-        ['Πρώτες Ύλες', String(stats.ingredients)],
-        ['Προμηθευτές', String(stats.suppliers)],
-        ['Υπάλληλοι', String(stats.employees)],
-        ['Μέσο Food Cost %', `${stats.avgCostPct.toFixed(1)}%`],
-        ['Αξία Αποθέματος', `${stats.inventoryValue.toFixed(2)} €`],
-        ['Χαμηλό Απόθεμα', String(stats.lowStock)],
-        ['Εκκρεμείς Παραγγελίες', String(stats.pendingOrders)],
-      ],
+        hasFeature('recipes') && ['Πιάτα Μενού', String(stats.recipes)],
+        hasFeature('ingredients') && ['Πρώτες Ύλες', String(stats.ingredients)],
+        hasFeature('orders') && ['Προμηθευτές', String(stats.suppliers)],
+        hasFeature('staff') && ['Υπάλληλοι', String(stats.employees)],
+        hasFeature('costing') && ['Μέσο Food Cost %', `${stats.avgCostPct.toFixed(1)}%`],
+        hasFeature('sales') && ['Έσοδα Μήνα', `${monthRevenue.toFixed(2)} €`],
+        hasFeature('inventory') && ['Αξία Αποθέματος', `${stats.inventoryValue.toFixed(2)} €`],
+        hasFeature('inventory') && ['Χαμηλό Απόθεμα', String(stats.lowStock)],
+        hasFeature('orders') && ['Εκκρεμείς Παραγγελίες', String(stats.pendingOrders)],
+      ].filter(Boolean),
       theme: 'striped',
       headStyles: { fillColor: OLIVE_RGB, font: 'NotoSans' },
       styles: { font: 'NotoSans' },
     })
     y = doc.lastAutoTable.finalY + 10
 
-    if (topCost.length > 0) {
+    if (hasFeature('costing') && topCost.length > 0) {
       doc.text('Πιάτα με Υψηλότερο Food Cost %', 14, y)
       y += 4
       autoTable(doc, {
@@ -156,8 +166,8 @@ export default function Dashboard() {
       y += 4
       autoTable(doc, {
         startY: y,
-        head: [['Κατάστημα', 'Αξία Αποθέματος', 'Χαμηλό Απόθεμα', 'Εκκρεμείς Παραγγελίες']],
-        body: storeSummary.map((s) => [s.name, `${s.value.toFixed(2)} €`, String(s.lowStock), String(s.pending)]),
+        head: [['Κατάστημα', ...(hasFeature('inventory') ? ['Αξία Αποθέματος', 'Χαμηλό Απόθεμα'] : []), ...(hasFeature('orders') ? ['Εκκρεμείς Παραγγελίες'] : [])]],
+        body: storeSummary.map((s) => [s.name, ...(hasFeature('inventory') ? [`${s.value.toFixed(2)} €`, String(s.lowStock)] : []), ...(hasFeature('orders') ? [String(s.pending)] : [])]),
         theme: 'striped',
         headStyles: { fillColor: OLIVE_RGB, font: 'NotoSans' },
         styles: { font: 'NotoSans' },
@@ -165,7 +175,7 @@ export default function Dashboard() {
       y = doc.lastAutoTable.finalY + 10
     }
 
-    if (lowStockList.length > 0) {
+    if (hasFeature('inventory') && lowStockList.length > 0) {
       if (y > 240) { doc.addPage(); y = 20; doc.setFont('NotoSans', 'normal') }
       doc.text('Χαμηλό Απόθεμα — Λεπτομέρειες', 14, y)
       y += 4
@@ -191,22 +201,23 @@ export default function Dashboard() {
 
       <div className="grid grid-4" style={{ marginBottom: 20 }}>
         <div className="card"><div className="stat-label">{t('totalStores')}</div><div className="stat-value">{stores.length}</div></div>
-        <div className="card"><div className="stat-label">{t('totalRecipes')}</div><div className="stat-value">{stats.recipes}</div></div>
-        <div className="card"><div className="stat-label">{t('totalIngredients')}</div><div className="stat-value">{stats.ingredients}</div></div>
-        <div className="card"><div className="stat-label">{t('avgFoodCost')}</div><div className="stat-value">{stats.avgCostPct.toFixed(1)}%</div></div>
+        {hasFeature('sales') && <div className="card"><div className="stat-label">{t('monthRevenue')}</div><div className="stat-value">{monthRevenue.toFixed(0)} €</div></div>}
+        {hasFeature('costing') && <div className="card"><div className="stat-label">{t('avgFoodCost')}</div><div className="stat-value">{stats.avgCostPct.toFixed(1)}%</div></div>}
+        {hasFeature('inventory') && <div className="card"><div className="stat-label">{t('inventoryValue')}</div><div className="stat-value">{stats.inventoryValue.toFixed(0)} €</div></div>}
+        {hasFeature('inventory') && (
+          <div className="card">
+            <div className="stat-label">{t('lowStock')}</div>
+            <div className="stat-value" style={{ color: stats.lowStock > 0 ? 'var(--danger)' : 'var(--ok)' }}>{stats.lowStock}</div>
+          </div>
+        )}
+        {hasFeature('orders') && <div className="card"><div className="stat-label">{t('pendingOrders')}</div><div className="stat-value">{stats.pendingOrders}</div></div>}
+        {hasFeature('ingredients') && <div className="card"><div className="stat-label">{t('totalIngredients')}</div><div className="stat-value">{stats.ingredients}</div></div>}
+        {hasFeature('recipes') && <div className="card"><div className="stat-label">{t('totalRecipes')}</div><div className="stat-value">{stats.recipes}</div></div>}
+        {hasFeature('orders') && <div className="card"><div className="stat-label">{t('totalSuppliers')}</div><div className="stat-value">{stats.suppliers}</div></div>}
+        {hasFeature('staff') && <div className="card"><div className="stat-label">{t('totalEmployees')}</div><div className="stat-value">{stats.employees}</div></div>}
       </div>
 
-      <div className="grid grid-4" style={{ marginBottom: 20 }}>
-        <div className="card"><div className="stat-label">{t('totalSuppliers')}</div><div className="stat-value">{stats.suppliers}</div></div>
-        <div className="card"><div className="stat-label">{t('totalEmployees')}</div><div className="stat-value">{stats.employees}</div></div>
-        <div className="card"><div className="stat-label">{t('inventoryValue')}</div><div className="stat-value">{stats.inventoryValue.toFixed(0)} €</div></div>
-        <div className="card">
-          <div className="stat-label">{t('lowStock')}</div>
-          <div className="stat-value" style={{ color: stats.lowStock > 0 ? 'var(--danger)' : 'var(--ok)' }}>{stats.lowStock}</div>
-        </div>
-      </div>
-
-      {priceAlerts.length > 0 && (
+      {hasFeature('receiving') && priceAlerts.length > 0 && (
         <div className="card" style={{ marginBottom: 20, borderColor: 'var(--danger)' }}>
           <h2 style={{ marginTop: 0, color: 'var(--danger)' }}>{t('priceIncreases')}</h2>
           <table>
@@ -223,8 +234,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div className="grid grid-2" style={{ marginBottom: 20 }}>
-        <div className="card">
+      <div className="grid grid-2" style={{ marginBottom: 20, gridTemplateColumns: (hasFeature('costing') && hasFeature('inventory')) ? undefined : '1fr', display: (!hasFeature('costing') && !hasFeature('inventory')) ? 'none' : undefined }}>
+        {hasFeature('costing') && <div className="card">
           <h2 style={{ marginTop: 0 }}>{t('topFoodCost')}</h2>
           {loading ? <p>{t('loading')}</p> : topCost.length === 0 ? <p>—</p> : (
             <table>
@@ -239,9 +250,9 @@ export default function Dashboard() {
               </tbody>
             </table>
           )}
-        </div>
+        </div>}
 
-        <div className="card">
+        {hasFeature('inventory') && <div className="card">
           <h2 style={{ marginTop: 0 }}>{t('recentActivity')}</h2>
           {loading ? <p>{t('loading')}</p> : recentMovements.length === 0 ? <p>—</p> : (
             <table>
@@ -257,20 +268,21 @@ export default function Dashboard() {
               </tbody>
             </table>
           )}
-        </div>
+        </div>}
       </div>
 
       <div className="card" style={{ marginBottom: 20 }}>
         <h2 style={{ marginTop: 0 }}>{t('storeSummary')}</h2>
         {loading ? <p>{t('loading')}</p> : storeSummary.length === 0 ? <p>{t('noStores')}</p> : (
           <table>
-            <thead><tr><th>{t('store')}</th><th>{t('inventoryValue')}</th><th>{t('lowStock')}</th><th>{t('pendingOrders')}</th></tr></thead>
+            <thead><tr><th>{t('store')}</th>{hasFeature('inventory') && <><th>{t('inventoryValue')}</th><th>{t('lowStock')}</th></>}{hasFeature('orders') && <th>{t('pendingOrders')}</th>}</tr></thead>
             <tbody>
               {storeSummary.map((s) => (
                 <tr key={s.name}>
-                  <td>{s.name}</td><td>{s.value.toFixed(2)} €</td>
-                  <td>{s.lowStock > 0 ? <span className="badge badge-danger">{s.lowStock}</span> : <span className="badge badge-ok">0</span>}</td>
-                  <td>{s.pending > 0 ? <span className="badge badge-warn">{s.pending}</span> : <span className="badge badge-ok">0</span>}</td>
+                  <td>{s.name}</td>
+                  {hasFeature('inventory') && <><td>{s.value.toFixed(2)} €</td>
+                  <td>{s.lowStock > 0 ? <span className="badge badge-danger">{s.lowStock}</span> : <span className="badge badge-ok">0</span>}</td></>}
+                  {hasFeature('orders') && <td>{s.pending > 0 ? <span className="badge badge-warn">{s.pending}</span> : <span className="badge badge-ok">0</span>}</td>}
                 </tr>
               ))}
             </tbody>
@@ -278,7 +290,7 @@ export default function Dashboard() {
         )}
       </div>
 
-      {pendingOrdersList.length > 0 && (
+      {hasFeature('orders') && pendingOrdersList.length > 0 && (
         <div className="card">
           <h2 style={{ marginTop: 0 }}>{t('upcomingOrders')}</h2>
           <table>

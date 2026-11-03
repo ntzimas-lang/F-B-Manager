@@ -31,6 +31,7 @@ export const translations = {
     allStoresTotal: 'Σύνολο όλων των καταστημάτων. Διάλεξε κατάστημα από πάνω για ανάλυση ανά κατάστημα.', foodCostAmount: 'Κόστος Πρώτων Υλών', grossMargin: 'Μικτό Κέρδος',
     purchases: 'Αγορές', wasteValue: 'Φύρα (αξία)', byMonth: 'Ανά μήνα', byDish: 'Ανά πιάτο', noSalesPeriod: 'Δεν υπάρχουν πωλήσεις αυτή την περίοδο.',
     costNote: 'Το κόστος υπολογίζεται από τις συνταγές με τις τρέχουσες τιμές των πρώτων υλών. Οι αγορές αφορούν παραλαβές με καταχωρημένη τιμή.',
+    monthRevenue: 'Έσοδα Μήνα',
     // Login
     login: 'Σύνδεση', wrongCredentials: 'Λάθος email ή κωδικός.',
     // Dashboard
@@ -104,6 +105,7 @@ export const translations = {
     noUsers: 'Δεν υπάρχουν χρήστες ακόμα.',
   },
   en: {
+    monthRevenue: 'Revenue This Month',
     results: 'Results', month: 'Month', quarter: 'Quarter', year: 'Year', season: 'Season', vsPrev: 'vs prev.', previousPeriod: 'Previous period',
     allStoresTotal: 'Total for all stores. Pick a store above for a per-store breakdown.', foodCostAmount: 'Ingredient Cost', grossMargin: 'Gross Margin',
     purchases: 'Purchases', wasteValue: 'Waste (value)', byMonth: 'By month', byDish: 'By dish', noSalesPeriod: 'No sales in this period.',
