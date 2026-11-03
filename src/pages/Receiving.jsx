@@ -88,7 +88,8 @@ export default function Receiving() {
     setSupName(sname)
     setLines(inv.lines.map(l => {
       const m = codeMap.find(c => c.item_code === key(l) && c.supplier_name === sname)
-      const f = m ? Number(m.factor) : 1
+      const pack = String(l.description).match(/(\d+)\s*\/\s*[ΧXχx][ΤT]/i)
+      const f = m ? Number(m.factor) : (pack && /^(κιβ|πακ|συσκ|box)/i.test(l.unit || '') ? Number(pack[1]) : 1)
       return {
         ingredient_id: m?.ingredient_id || '', code: key(l), desc: l.description, iunit: l.unit,
         rawQty: l.qty, rawPrice: l.price, factor: f,
@@ -133,7 +134,7 @@ export default function Receiving() {
     const l = lines[i]
     const u = String(l.iunit || '').toLowerCase()
     const unit = /^(κιλ|kg)/.test(u) ? 'kg' : /^(λιτ|lt|l$)/.test(u) ? 'lt' : 'τεμ'
-    const name = String(l.desc || '').replace(/\s+/g, ' ').trim()
+    const name = String(l.desc || '').replace(/\s*\d+\s*\/\s*[ΧXχx][ΤT]\.?/i, '').replace(/\s+ΤΕΜ\.?$/i, '').replace(/\.$/, '').replace(/\s+/g, ' ').trim()
     const { data: ing, error } = await supabase.from('ingredients').insert({
       name, unit, current_price: Number(l.unit_price) || 0, supplier_id: supplierId || null,
     }).select().single()
