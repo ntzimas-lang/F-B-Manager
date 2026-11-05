@@ -20,6 +20,7 @@ import Companies from './pages/Companies'
 import SetPassword from './pages/SetPassword'
 import Admin from './pages/Admin'
 import Reports from './pages/Reports'
+import MyBusiness from './pages/MyBusiness'
 
 function Feature({ name, children }) {
   const { hasFeature } = useAuth()
@@ -64,8 +65,9 @@ function Gate() {
     <StoreProvider>
       <BrowserRouter>
         <Routes>
+          <Route path="/" element={<MyBusiness />} />
           <Route element={<Layout />}>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/stores" element={<Feature name="stores"><Stores /></Feature>} />
             <Route path="/recipes" element={<Feature name="recipes"><Recipes /></Feature>} />
             <Route path="/ingredients" element={<Feature name="ingredients"><Ingredients /></Feature>} />

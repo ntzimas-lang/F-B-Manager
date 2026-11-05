@@ -17,9 +17,9 @@ export default function Layout() {
     <div className="app-shell" data-role={role} data-readonly={readOnly ? '1' : '0'}>
       <div className={'sidebar-backdrop' + (menuOpen ? ' open' : '')} onClick={() => setMenuOpen(false)} />
       <aside className={'sidebar' + (menuOpen ? ' open' : '')} onClick={(e) => { if (e.target.closest('a')) setMenuOpen(false) }}>
-        <div className="sidebar-logo">F&B <span>Manager</span></div>
+        <NavLink to="/" end className="sidebar-logo" style={{display:'block', textDecoration:'none', color:'inherit'}} title="My Business">F&B <span>Manager</span><div style={{fontSize:11, fontWeight:500, opacity:.7, marginTop:2}}>← My Business</div></NavLink>
         {hasFeature('dashboard') && (
-          <NavLink to="/" end className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
+          <NavLink to="/dashboard" end className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
             <LayoutDashboard size={18} /> {t('dashboard')}
           </NavLink>
         )}
