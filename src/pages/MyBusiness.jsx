@@ -35,3 +35,16 @@ export function EmbeddedApp() {
     </div>
   )
 }
+
+// Κέλυφος για τις ανεξάρτητες εφαρμογές του My Business (εκτός F&B Manager)
+export function AppShell({ title, children }) {
+  return (
+    <div className="shell">
+      <div className="shell-in">
+        <h1 style={{ marginBottom: 14 }}>{title}</h1>
+        {children}
+      </div>
+      <Link to="/" className="hub-pill">← My Business</Link>
+    </div>
+  )
+}

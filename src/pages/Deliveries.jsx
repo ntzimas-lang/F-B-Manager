@@ -78,7 +78,7 @@ export default function Deliveries() {
 
   return (
     <div>
-      <div className="topbar" style={{ marginBottom: 12 }}><h1>Δελτία Εκδηλώσεων</h1></div>
+      
       <div className="card" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginBottom: 14 }}>
         {[['draft', 'Κατάστημα', ['draft', 'rejected']], ['pending', 'Πελάτης', ['pending']], ['accepted', 'Λογιστήριο', ['accepted']], ['invoiced', 'Ολοκληρώθηκαν', ['invoiced']]].map(([s, l, ss]) => (
           <div key={s}><div className="stat-label" style={{ color: COLOR[s] }}>{l}</div><div className="stat-value" style={{ fontSize: 22 }}>{loading ? '…' : c(ss)}</div></div>
