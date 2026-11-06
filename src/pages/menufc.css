@@ -54,3 +54,8 @@
 .mfa .ok{color:var(--good)}.mfa .err{color:var(--bad)}
 .mfa .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:76px;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:500;z-index:60}
 @media (max-width:640px){.mfa h1{font-size:1.35rem}.mfa .bc svg{height:28px}.mfa .savebar .in{padding-left:170px}}
+.mfa .row input[type=number]{width:96px}
+.mfa .adm .row input[type=number]{width:96px}
+.mfa .file{display:inline-flex;align-items:center;gap:8px}
+.mfa .file input{max-width:260px}
+.mfa [hidden]{display:none!important}
