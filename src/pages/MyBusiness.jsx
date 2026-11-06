@@ -13,6 +13,7 @@ export default function MyBusiness() {
           {BUSINESS_APPS.map((a) => {
             const body = (<><div className="hub-ico">{a.icon}</div><h2>{a.title}</h2><p>{a.desc}</p>{!a.to && !a.url && <span className="hub-soon">Σύντομα</span>}</>)
             if (a.to) return <Link key={a.id} to={a.to} className="hub-card">{body}</Link>
+            if (a.url && a.external) return <a key={a.id} href={a.url} target="_blank" rel="noreferrer" className="hub-card">{body}</a>
             if (a.url) return <Link key={a.id} to={`/app/${a.id}`} className="hub-card">{body}</Link>
             return <div key={a.id} className="hub-card off">{body}</div>
           })}
