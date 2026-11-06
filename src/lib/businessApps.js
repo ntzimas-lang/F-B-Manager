@@ -5,4 +5,5 @@ export const BUSINESS_APPS = [
   { id: 'apografi', icon: '📋', title: 'Απογραφή', desc: 'Μηνιαία απογραφή καταστημάτων με barcode', url: '/apografi/index.html' },
   { id: 'deltia', icon: '🧾', title: 'Δελτία Εκδηλώσεων', desc: 'Δελτία αποστολής: κατάστημα, πελάτης, λογιστήριο', to: '/deltia' },
   { id: 'menu-fc', icon: '📊', title: 'Μηνιαίο Μενού FC', desc: 'Food cost μενού ανά κατάστημα, PowerPoint', to: '/menu-fc' },
+  { id: 'tameio', icon: '💶', title: 'Ταμείο', desc: 'Κλείσιμο ταμείου, μάρκες, στοιχεία εργαζομένων', url: '/tameio/index.html' },
 ]
