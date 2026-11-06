@@ -70,7 +70,7 @@ function Gate() {
         <Routes>
           <Route path="/" element={<MyBusiness />} />
           <Route path="/app/:id" element={<EmbeddedApp />} />
-          <Route path="/menu-fc" element={<AppShell title="Μηνιαίο Μενού FC"><MenuFC /></AppShell>} />
+          <Route path="/menu-fc" element={<MenuFC />} />
           <Route path="/deltia" element={<AppShell title="Δελτία Εκδηλώσεων"><Deliveries /></AppShell>} />
           <Route element={<Layout />}>
             <Route path="/dashboard" element={<Dashboard />} />
@@ -99,6 +99,7 @@ function Gate() {
 export default function App() {
   const m = window.location.pathname.match(/^\/d\/([0-9a-f-]{36})$/i)
   if (m) return <DeliveryPublic token={m[1]} />
+  if (window.location.pathname === '/menu-fc') return <BrowserRouter><MenuFC /></BrowserRouter>
   return (
     <LanguageProvider>
       <AuthProvider>

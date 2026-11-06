@@ -1,0 +1,56 @@
+.mfa{--bg:#f3f4f1;--surface:#fff;--ink:#1b2620;--muted:#5d6a62;--line:#dadfd8;--accent:#6f8f1f;--accent-ink:#fff;--accent-soft:#eef3df;--good:#1f7a43;--good-soft:#e2f2e7;--warn:#9a6200;--warn-soft:#fbefd7;--bad:#b3261e;--bad-soft:#f8e3e1;--s1:#f2b632;--s2:#e03a2f;--s3:#8cc63f;--s4:#8fcfc4;--sw:#b9c0bb;--chip-ink:#1b2620;--f-display:"Archivo",system-ui,sans-serif;--f-body:"IBM Plex Sans",system-ui,sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,monospace;
+ min-height:100vh;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+@media (prefers-color-scheme:dark){.mfa{--bg:#121713;--surface:#1a211c;--ink:#e6ebe6;--muted:#9ba89f;--line:#2c3630;--accent:#a9c94f;--accent-ink:#141a10;--accent-soft:#273019;--good:#6fd394;--good-soft:#1b3224;--warn:#f0b54a;--warn-soft:#3a2d14;--bad:#ff8a80;--bad-soft:#3d1f1d;--sw:#5d6a62;color-scheme:dark}}
+.mfa *{box-sizing:border-box}
+.mfa .wrap{max-width:1100px;margin:0 auto;padding:20px 16px 110px;display:flex;flex-direction:column;gap:16px}
+.mfa header{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:flex-end;justify-content:space-between}
+.mfa h1{font-family:var(--f-display);font-weight:800;font-size:1.7rem;margin:0;letter-spacing:-.01em}
+.mfa h2{font-family:var(--f-display);font-weight:700;font-size:1.1rem;margin:0;color:var(--ink)}
+.mfa .eyebrow{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.mfa .controls{display:flex;flex-wrap:wrap;gap:12px}
+.mfa label.f{display:flex;flex-direction:column;gap:4px;font-size:.75rem;color:var(--muted);font-weight:600;letter-spacing:.04em}
+.mfa input,.mfa select,.mfa button{font:inherit;color:inherit}
+.mfa input,.mfa select{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 9px;min-width:0}
+.mfa .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.mfa .tab{background:none;border:0;border-bottom:3px solid transparent;padding:10px 14px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.mfa .tab[aria-selected="true"]{color:var(--ink);border-color:var(--accent)}
+.mfa .panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.mfa .phead{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;padding:14px 16px;border-bottom:1px solid var(--line)}
+.mfa .tscroll{overflow-x:auto}
+.mfa table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.mfa th{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);text-align:left;font-weight:600;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface)}
+.mfa td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+.mfa tr:hover td{background:inherit}
+.mfa tr.day td{background:var(--bg);font-weight:600;padding-block:7px}
+.mfa tr.day .dl{font-family:var(--f-display)}
+.mfa .num{text-align:right;font-family:var(--f-mono);white-space:nowrap}
+.mfa .dish{font-weight:500;font-size:.9rem;line-height:1.3}
+.mfa .code{font-family:var(--f-mono);font-size:.75rem;color:var(--muted)}
+.mfa .chip{display:inline-block;font-size:.66rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--chip-ink);padding:2px 7px;border-radius:4px;white-space:nowrap}
+.mfa .c1{background:var(--s1)}.mfa .c2{background:var(--s2);color:#fff}.mfa .c3{background:var(--s3)}.mfa .c4{background:var(--s4)}.mfa .cw{background:var(--sw)}
+.mfa .qty{width:64px;text-align:right;font-family:var(--f-mono)}
+.mfa .bc{background:#fff;border-radius:3px;padding:2px;display:inline-block;line-height:0}
+.mfa .bc svg{height:34px;width:auto;max-width:130px}
+.mfa .pill{display:inline-block;font-family:var(--f-mono);font-weight:500;padding:1px 8px;border-radius:99px;font-size:.82rem}
+.mfa .good{background:var(--good-soft);color:var(--good)}.mfa .warn{background:var(--warn-soft);color:var(--warn)}.mfa .bad{background:var(--bad-soft);color:var(--bad)}.mfa .none{background:var(--bg);color:var(--muted)}
+.mfa .strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line)}
+.mfa .strip>div{background:var(--surface);padding:12px 16px;display:flex;flex-direction:column;gap:2px}
+.mfa .strip .k{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.mfa .strip .v{font-family:var(--f-mono);font-size:1.3rem;font-weight:500}
+.mfa .strip .v.good,.mfa .strip .v.warn,.mfa .strip .v.bad{background:none}
+.mfa .verdict{padding:10px 16px;font-weight:600;border-top:1px solid var(--line)}
+.mfa .weeks{display:flex;gap:6px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line)}
+.mfa .wk{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:5px 12px;font-size:.85rem;font-weight:500;cursor:pointer}
+.mfa .wk[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.mfa .btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:6px;padding:9px 16px;font-weight:600;cursor:pointer;white-space:nowrap}
+.mfa .btn.ghost{background:none;color:var(--ink);border:1px solid var(--line)}
+.mfa .btn:disabled{opacity:.45;cursor:default}
+.mfa .muted{color:var(--muted);font-size:.85rem}
+.mfa .empty{padding:28px 18px;color:var(--muted);text-align:center}
+.mfa .row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;padding:14px 16px;border-bottom:1px solid var(--line)}
+.mfa .adm input[type=number]{width:84px;text-align:right;font-family:var(--f-mono)}
+.mfa .savebar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);z-index:5}
+.mfa .savebar .in{max-width:1100px;margin:0 auto;display:flex;gap:12px;align-items:center;justify-content:space-between;padding:10px 16px 10px 190px}
+.mfa .ok{color:var(--good)}.mfa .err{color:var(--bad)}
+.mfa .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:76px;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:500;z-index:60}
+@media (max-width:640px){.mfa h1{font-size:1.35rem}.mfa .bc svg{height:28px}.mfa .savebar .in{padding-left:170px}}
