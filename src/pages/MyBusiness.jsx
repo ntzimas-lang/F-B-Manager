@@ -1,5 +1,7 @@
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { UtensilsCrossed, ClipboardList, Receipt, ChartColumn, CalendarDays, LayoutGrid } from 'lucide-react'
+const ICONS = { UtensilsCrossed, ClipboardList, Receipt, ChartColumn, CalendarDays }
 import { BUSINESS_APPS } from '../lib/businessApps'
 
 export default function MyBusiness() {
@@ -11,7 +13,7 @@ export default function MyBusiness() {
         <p className="hub-sub">Οι εφαρμογές της δουλειάς μου σε ένα μέρος</p>
         <div className="hub-grid">
           {BUSINESS_APPS.map((a) => {
-            const body = (<><div className="hub-ico">{a.icon}</div><h2>{a.title}</h2><p>{a.desc}</p>{!a.to && !a.url && <span className="hub-soon">Σύντομα</span>}</>)
+            const body = (<><div className="hub-ico">{(() => { const I = ICONS[a.icon] || LayoutGrid; return <I size={34} strokeWidth={1.5} /> })()}</div><h2>{a.title}</h2><p>{a.desc}</p>{!a.to && !a.url && <span className="hub-soon">Σύντομα</span>}</>)
             if (a.to) return <Link key={a.id} to={a.to} className="hub-card">{body}</Link>
             if (a.url && a.external) return <a key={a.id} href={a.url} target="_blank" rel="noreferrer" className="hub-card">{body}</a>
             if (a.url) return <Link key={a.id} to={`/app/${a.id}`} className="hub-card">{body}</Link>

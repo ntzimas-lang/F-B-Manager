@@ -305,7 +305,7 @@ td.cv-short{background:#fde7e5;color:#b3261e}td.cv-over{background:#fff0d6;color
 .hub-card{display:block;background:#faf9f5;border:1px solid #ddd8cb;border-radius:22px;padding:28px;min-height:200px;color:#222;text-decoration:none;transition:box-shadow .15s,transform .15s}
 .hub-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.08);transform:translateY(-2px)}
 .hub-card.off{opacity:.55;cursor:default}.hub-card.off:hover{box-shadow:none;transform:none}
-.hub-ico{font-size:40px;margin-bottom:22px}
+.hub-ico{margin-bottom:22px;color:#555;line-height:0}
 .hub-card h2{font-size:24px;margin:0 0 8px;color:#222}
 .hub-card p{margin:0;color:#6b6b5f;font-size:15px;line-height:1.4}
 .hub-soon{display:inline-block;margin-top:12px;font-size:12px;background:#e5e0d2;border-radius:10px;padding:2px 10px}
