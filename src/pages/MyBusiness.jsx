@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { UtensilsCrossed, ClipboardList, Receipt, ChartColumn, CalendarDays, LayoutGrid } from 'lucide-react'
-const ICONS = { UtensilsCrossed, ClipboardList, Receipt, ChartColumn, CalendarDays }
+import { UtensilsCrossed, ClipboardList, Receipt, ChartColumn, CalendarDays, Calculator, LayoutGrid } from 'lucide-react'
+const ICONS = { UtensilsCrossed, ClipboardList, Receipt, ChartColumn, CalendarDays, Calculator }
 import { BUSINESS_APPS } from '../lib/businessApps'
 
 export default function MyBusiness() {

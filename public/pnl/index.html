@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<title>P&L Εστιατορίου — Διαδραστική Εφαρμογή (Λειτουργικοί Δείκτες)</title>
+<style>
+  :root{
+    --navy:#1F4E78; --blue:#2E75B6; --lightblue:#D9E1F2; --totalblue:#BDD7EE;
+    --green:#1e7e34; --amber:#b58900; --red:#c0392b; --gray:#666;
+  }
+  *{box-sizing:border-box;}
+  body{font-family:Arial, Helvetica, sans-serif; background:#f4f6f9; margin:0; padding:24px; color:#222;}
+  .wrap{max-width:960px;margin:0 auto;}
+  h1{background:var(--navy); color:#fff; margin:0; padding:16px 20px; border-radius:8px 8px 0 0; font-size:19px;}
+  .subtitle{background:#fff; padding:8px 20px; font-size:12px; color:var(--gray); border-left:1px solid #ddd; border-right:1px solid #ddd;}
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:20px;}
+  @media (max-width:780px){.grid{grid-template-columns:1fr;}}
+  .card{background:#fff; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); overflow:hidden;}
+  .section-title{background:var(--blue); color:#fff; font-weight:bold; font-size:13px; padding:9px 14px;}
+  .row{padding:8px 14px; border-bottom:1px solid #eee;}
+  .row-flex{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+  .row label{font-size:13px; color:#222; font-weight:bold;}
+  .row .hint{font-size:11px; color:var(--gray); margin-top:2px; line-height:1.4;}
+  .row input{
+    width:100px; text-align:right; padding:5px 6px; border:1px solid #bcd; border-radius:4px;
+    font-size:13px; font-family:Arial, Helvetica, sans-serif; color:#0000CC; flex-shrink:0;
+  }
+  .row input:focus{outline:2px solid var(--blue); border-color:var(--blue);}
+  .unit{font-size:12px; color:var(--gray); width:22px; text-align:left;}
+  .results{background:#fff; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); margin-top:20px; overflow:hidden;}
+  .res-row{display:flex; justify-content:space-between; padding:9px 16px; font-size:14px; border-bottom:1px solid #eee;}
+  .res-row.sub{background:var(--lightblue); font-weight:bold;}
+  .res-row.total{background:var(--totalblue); font-weight:bold; font-size:15px;}
+  .res-row.net{background:var(--navy); color:#fff; font-weight:bold; font-size:16px;}
+  .pct{color:var(--gray); font-weight:normal; margin-left:8px; font-size:12px;}
+  .kpi-box{background:#fff; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); margin-top:20px; padding:14px 16px;}
+  .kpi-title{font-weight:bold; font-size:13px; color:var(--navy); margin-bottom:8px;}
+  .kpis{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
+  @media (max-width:600px){.kpis{grid-template-columns:1fr;}}
+  .kpi{background:#f7f9fc; border-radius:6px; padding:10px; text-align:center;}
+  .kpi .val{font-size:17px; font-weight:bold;}
+  .kpi .lab{font-size:11px; color:var(--gray); margin-top:3px;}
+  .glossary{background:#fff; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); margin-top:20px; padding:14px 18px; font-size:12px; color:#444; line-height:1.7;}
+  .glossary b{color:var(--navy);}
+  footer{text-align:center; font-size:11px; color:#999; margin-top:18px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>P&amp;L Εστιατορίου — Διαδραστική Εφαρμογή</h1>
+  <div class="subtitle">Καταχωρείτε λειτουργικούς δείκτες (κουβέρ, FC, BC, LC κ.λπ.) — το Excel-style P&amp;L υπολογίζεται αυτόματα από κάτω.</div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="section-title">ΚΟΥΒΕΡ &amp; ΠΩΛΗΣΕΙΣ</div>
+      <div class="row"><div class="row-flex"><label>Ημέρες λειτουργίας / έτος</label><input type="number" id="days" value="350" class="calc"></div></div>
+      <div class="row"><div class="row-flex"><label>Κουβέρ / ημέρα (μέσος όρος πελατών)</label><input type="number" id="covers" value="80" class="calc"></div>
+        <div class="hint">Κουβέρ = αριθμός πελατών που εξυπηρετούνται.</div></div>
+      <div class="row"><div class="row-flex"><label>Μέσος λογαριασμός Φαγητού / κουβέρ</label><input type="number" id="avgFood" value="18" class="calc"></div></div>
+      <div class="row"><div class="row-flex"><label>Μέσος λογαριασμός Ποτών (μη αλκοολ.) / κουβέρ</label><input type="number" id="avgBev" value="3" class="calc"></div></div>
+      <div class="row"><div class="row-flex"><label>Μέσος λογαριασμός Αλκοόλ / κουβέρ</label><input type="number" id="avgAlc" value="6" class="calc"></div></div>
+      <div class="row"><div class="row-flex"><label>Λοιπά Έσοδα / έτος (delivery, catering)</label><input type="number" id="otherRev" value="30000" class="calc"></div></div>
+
+      <div class="section-title">ΚΟΣΤΟΣ ΠΩΛΗΘΕΝΤΩΝ (% επί πωλήσεων κατηγορίας)</div>
+      <div class="row"><div class="row-flex"><label>FC – Food Cost %</label><span><input type="number" id="fc" value="30" class="calc" step="0.1"><span class="unit">%</span></span></div>
+        <div class="hint">Κόστος α' υλών φαγητού ως % επί των πωλήσεων φαγητού. Στόχος συνήθως 28–35%.</div></div>
+      <div class="row"><div class="row-flex"><label>BC – Beverage Cost %</label><span><input type="number" id="bc" value="22" class="calc" step="0.1"><span class="unit">%</span></span></div>
+        <div class="hint">Κόστος μη αλκοολούχων ποτών ως % επί των πωλήσεών τους.</div></div>
+      <div class="row"><div class="row-flex"><label>AC – Alcohol Cost %</label><span><input type="number" id="ac" value="25" class="calc" step="0.1"><span class="unit">%</span></span></div>
+        <div class="hint">Κόστος αλκοόλ ως % επί των πωλήσεων αλκοόλ.</div></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">ΛΕΙΤΟΥΡΓΙΚΑ ΕΞΟΔΑ (% επί Συνόλου Εσόδων)</div>
+      <div class="row"><div class="row-flex"><label>LC – Labor Cost %</label><span><input type="number" id="lc" value="26" class="calc" step="0.1"><span class="unit">%</span></span></div>
+        <div class="hint">Κόστος προσωπικού (μισθοί + εισφορές) ως % επί συνόλου εσόδων. Στόχος συνήθως 25–30%.</div></div>
+      <div class="row"><div class="row-flex"><label>Ενοίκιο (Occupancy) %</label><span><input type="number" id="rent" value="9" class="calc" step="0.1"><span class="unit">%</span></span></div></div>
+      <div class="row"><div class="row-flex"><label>ΔΕΗ / Νερό / Θέρμανση %</label><span><input type="number" id="util" value="3.5" class="calc" step="0.1"><span class="unit">%</span></span></div></div>
+      <div class="row"><div class="row-flex"><label>Μάρκετινγκ &amp; Διαφήμιση %</label><span><input type="number" id="mkt" value="2" class="calc" step="0.1"><span class="unit">%</span></span></div></div>
+      <div class="row"><div class="row-flex"><label>Ασφάλιστρα %</label><span><input type="number" id="ins" value="1" class="calc" step="0.1"><span class="unit">%</span></span></div></div>
+      <div class="row"><div class="row-flex"><label>Συντήρηση &amp; Επισκευές %</label><span><input type="number" id="maint" value="1.3" class="calc" step="0.1"><span class="unit">%</span></span></div></div>
+      <div class="row"><div class="row-flex"><label>Αναλώσιμα %</label><span><input type="number" id="supp" value="1.2" class="calc" step="0.1"><span class="unit">%</span></span></div></div>
+      <div class="row"><div class="row-flex"><label>Διοικητικά / Λογιστικά %</label><span><input type="number" id="admin" value="1.5" class="calc" step="0.1"><span class="unit">%</span></span></div></div>
+      <div class="row"><div class="row-flex"><label>Λοιπά Λειτουργικά %</label><span><input type="number" id="otherOp" value="1" class="calc" step="0.1"><span class="unit">%</span></span></div></div>
+
+      <div class="section-title">ΑΠΟΣΒΕΣΕΙΣ &amp; ΧΡΗΜΑΤΟΟΙΚΟΝΟΜΙΚΑ</div>
+      <div class="row"><div class="row-flex"><label>Αποσβέσεις (D&amp;A) / έτος</label><input type="number" id="da" value="14000" class="calc"></div></div>
+      <div class="row"><div class="row-flex"><label>Τόκοι / έτος</label><input type="number" id="intx" value="5000" class="calc"></div></div>
+      <div class="row"><div class="row-flex"><label>Φορολογικός Συντελεστής</label><span><input type="number" id="taxrate" value="22" class="calc" step="0.1"><span class="unit">%</span></span></div></div>
+    </div>
+  </div>
+
+  <div class="kpi-box">
+    <div class="kpi-title">Βασικοί Δείκτες (KPIs)</div>
+    <div class="kpis">
+      <div class="kpi"><div class="val" id="kpi-covers">—</div><div class="lab">Κουβέρ / έτος</div></div>
+      <div class="kpi"><div class="val" id="kpi-avgcheck">—</div><div class="lab">Μέσος Λογαριασμός / Κουβέρ</div></div>
+      <div class="kpi"><div class="val" id="kpi-prime">—</div><div class="lab">Prime Cost % (FC+BC+AC+LC επί εσόδων)</div></div>
+    </div>
+  </div>
+
+  <div class="results">
+    <div class="res-row sub"><span>Σύνολο Εσόδων</span><span id="out-rev">—</span></div>
+    <div class="res-row"><span>Σύνολο Κόστους Πωληθέντων (COGS)</span><span id="out-cogs">—</span></div>
+    <div class="res-row total"><span>ΜΙΚΤΟ ΚΕΡΔΟΣ <span class="pct" id="pct-gross"></span></span><span id="out-gross">—</span></div>
+    <div class="res-row"><span>Σύνολο Λειτουργικών Εξόδων (με Labor)</span><span id="out-opex">—</span></div>
+    <div class="res-row total"><span>EBITDA <span class="pct" id="pct-ebitda"></span></span><span id="out-ebitda">—</span></div>
+    <div class="res-row"><span>Αποσβέσεις (D&amp;A)</span><span id="out-da">—</span></div>
+    <div class="res-row sub"><span>EBIT</span><span id="out-ebit">—</span></div>
+    <div class="res-row"><span>Τόκοι</span><span id="out-int">—</span></div>
+    <div class="res-row sub"><span>Κέρδη προ Φόρων (EBT)</span><span id="out-ebt">—</span></div>
+    <div class="res-row"><span>Φόρος Εισοδήματος</span><span id="out-tax">—</span></div>
+    <div class="res-row net"><span>ΚΑΘΑΡΟ ΚΕΡΔΟΣ <span class="pct" id="pct-net"></span></span><span id="out-net">—</span></div>
+  </div>
+
+  <div class="glossary">
+    <b>FC</b> = Food Cost % (κόστος α' υλών φαγητού ÷ πωλήσεις φαγητού) &nbsp;•&nbsp;
+    <b>BC</b> = Beverage Cost % &nbsp;•&nbsp;
+    <b>AC</b> = Alcohol Cost % &nbsp;•&nbsp;
+    <b>LC</b> = Labor Cost % (κόστος προσωπικού ÷ σύνολο εσόδων) &nbsp;•&nbsp;
+    <b>Κουβέρ</b> = αριθμός πελατών που εξυπηρετούνται &nbsp;•&nbsp;
+    <b>Prime Cost</b> = (COGS + Κόστος Προσωπικού) ÷ Σύνολο Εσόδων — βασικός δείκτης βιωσιμότητας εστιατορίου. Στόχος: ≤ 60% (πράσινο), 60–65% προσοχή (κίτρινο), &gt;65% κίνδυνος (κόκκινο).
+  </div>
+
+  <footer>Όλοι οι υπολογισμοί γίνονται τοπικά στον browser σας.</footer>
+</div>
+
+<script>
+function num(id){ const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? 0 : v; }
+function fmt(n){
+  const neg = n < 0;
+  const s = Math.abs(n).toLocaleString('el-GR', {maximumFractionDigits:0}) + ' €';
+  return neg ? '(' + s + ')' : s;
+}
+function pct(n){ return isFinite(n) ? (n*100).toFixed(1) + '%' : '—'; }
+
+function calc(){
+  const days = num('days'), covers = num('covers');
+  const coversYear = days * covers;
+
+  const foodSales = coversYear * num('avgFood');
+  const bevSales = coversYear * num('avgBev');
+  const alcSales = coversYear * num('avgAlc');
+  const otherRev = num('otherRev');
+  const rev = foodSales + bevSales + alcSales + otherRev;
+
+  const foodCost = foodSales * num('fc')/100;
+  const bevCost = bevSales * num('bc')/100;
+  const alcCost = alcSales * num('ac')/100;
+  const cogs = foodCost + bevCost + alcCost;
+
+  const gross = rev - cogs;
+
+  const laborCost = rev * num('lc')/100;
+  const rent = rev * num('rent')/100;
+  const util = rev * num('util')/100;
+  const mkt = rev * num('mkt')/100;
+  const ins = rev * num('ins')/100;
+  const maint = rev * num('maint')/100;
+  const supp = rev * num('supp')/100;
+  const admin = rev * num('admin')/100;
+  const otherOp = rev * num('otherOp')/100;
+  const opex = laborCost + rent + util + mkt + ins + maint + supp + admin + otherOp;
+
+  const ebitda = gross - opex;
+  const da = num('da');
+  const ebit = ebitda - da;
+  const intx = num('intx');
+  const ebt = ebit - intx;
+  const taxrate = num('taxrate')/100;
+  const tax = ebt * taxrate;
+  const net = ebt - tax;
+
+  document.getElementById('out-rev').textContent = fmt(rev);
+  document.getElementById('out-cogs').textContent = fmt(cogs);
+  document.getElementById('out-gross').textContent = fmt(gross);
+  document.getElementById('pct-gross').textContent = rev ? pct(gross/rev) : '';
+  document.getElementById('out-opex').textContent = fmt(opex);
+  document.getElementById('out-ebitda').textContent = fmt(ebitda);
+  document.getElementById('pct-ebitda').textContent = rev ? pct(ebitda/rev) : '';
+  document.getElementById('out-da').textContent = fmt(da);
+  document.getElementById('out-ebit').textContent = fmt(ebit);
+  document.getElementById('out-int').textContent = fmt(intx);
+  document.getElementById('out-ebt').textContent = fmt(ebt);
+  document.getElementById('out-tax').textContent = fmt(tax);
+  document.getElementById('out-net').textContent = fmt(net);
+  document.getElementById('pct-net').textContent = rev ? pct(net/rev) : '';
+
+  const netRow = document.querySelector('.res-row.net');
+  netRow.style.background = net < 0 ? 'var(--red)' : 'var(--navy)';
+
+  document.getElementById('kpi-covers').textContent = coversYear.toLocaleString('el-GR');
+  document.getElementById('kpi-avgcheck').textContent = coversYear ? (rev/coversYear).toLocaleString('el-GR', {maximumFractionDigits:2}) + ' €' : '—';
+
+  const prime = rev ? (cogs + laborCost)/rev : 0;
+  const primeEl = document.getElementById('kpi-prime');
+  primeEl.textContent = pct(prime);
+  primeEl.style.color = prime <= 0.60 ? 'var(--green)' : (prime <= 0.65 ? 'var(--amber)' : 'var(--red)');
+}
+
+document.querySelectorAll('.calc').forEach(el => el.addEventListener('input', calc));
+calc();
+</script>
+</body>
+</html>
