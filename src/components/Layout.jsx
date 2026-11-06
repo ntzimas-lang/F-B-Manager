@@ -17,7 +17,7 @@ export default function Layout() {
     <div className="app-shell" data-role={role} data-readonly={readOnly ? '1' : '0'}>
       <div className={'sidebar-backdrop' + (menuOpen ? ' open' : '')} onClick={() => setMenuOpen(false)} />
       <aside className={'sidebar' + (menuOpen ? ' open' : '')} onClick={(e) => { if (e.target.closest('a')) setMenuOpen(false) }}>
-        <NavLink to="/" end className="sidebar-logo" style={{display:'block', textDecoration:'none', color:'inherit'}} title="My Business">F&B <span>Manager</span><div style={{fontSize:11, fontWeight:500, opacity:.7, marginTop:2}}>← My Business</div></NavLink>
+        <NavLink to="/" end className="sidebar-logo" style={{display:'block', textDecoration:'none', color:'inherit'}} title="My Business">F&B <span>Manager</span></NavLink>
         {hasFeature('dashboard') && (
           <NavLink to="/dashboard" end className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
             <LayoutDashboard size={18} /> {t('dashboard')}
@@ -74,11 +74,6 @@ export default function Layout() {
         {hasFeature('staff') && (
           <NavLink to="/staff" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
             <Settings size={18} /> {t('staff')}
-          </NavLink>
-        )}
-        {hasFeature('deliveries') && (
-          <NavLink to="/deliveries" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
-            <Receipt size={18} /> {lang === 'el' ? 'Δελτία Εκδηλώσεων' : 'Event Notes'}
           </NavLink>
         )}
         {hasFeature('activity') && (
@@ -147,6 +142,7 @@ export default function Layout() {
           </div>
         </div>
         <Outlet />
+      <NavLink to="/" end className="hub-pill">← My Business</NavLink>
       </main>
     </div>
   )

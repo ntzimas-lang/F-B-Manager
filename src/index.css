@@ -314,14 +314,6 @@ td.cv-short{background:#fde7e5;color:#b3261e}td.cv-over{background:#fff0d6;color
 .embed-bar{display:flex;gap:16px;align-items:center;padding:10px 16px;background:#faf9f5;border-bottom:1px solid #ddd8cb;font-size:14px}
 .embed-bar a{color:var(--olive-700);text-decoration:none;font-weight:600}.embed-bar a:last-child{margin-left:auto;font-weight:500;font-size:13px}
 .embed iframe{flex:1;border:0;width:100%}
-
-/* ---- Δελτία Εκδηλώσεων ---- */
-.dl-split{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:14px;align-items:start}
-.dl-row{display:grid;grid-template-columns:1fr auto;gap:2px 8px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--olive-100);padding:10px 4px;cursor:pointer}
-.dl-row .muted{grid-column:1/-1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dl-row:hover,.dl-row.cur{background:var(--olive-50)}.dl-row.late{box-shadow:inset 3px 0 0 #b3261e}
-.dl-kv{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0 0 12px}.dl-kv dt{color:#6b6b5f;font-size:12px;text-transform:uppercase}.dl-kv dd{margin:0}
-.dl-form{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin:12px 0}
-.back-m{display:none;margin-bottom:10px}
-.btn.danger,.btn.btn-outline.danger{color:#b3261e;border-color:#b3261e}.btn.danger{background:transparent;border:1px solid #b3261e}
-@media(max-width:820px){.dl-split{grid-template-columns:1fr}.hide-m{display:none}.back-m{display:inline-block}.dl-form{grid-template-columns:1fr}}
+.hub-pill{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:50;background:#3b3b36;color:#fff!important;font-weight:700;font-size:15px;padding:12px 18px;border-radius:999px;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.hub-pill:hover{background:#222}
+@media print{.hub-pill{display:none}}

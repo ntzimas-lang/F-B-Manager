@@ -29,12 +29,8 @@ export function EmbeddedApp() {
   if (!app?.url) return <div className="hub"><Link to="/">← My Business</Link></div>
   return (
     <div className="embed">
-      <div className="embed-bar">
-        <Link to="/">← My Business</Link>
-        <b>{app.title}</b>
-        <a href={app.url} target="_blank" rel="noreferrer">Άνοιγμα σε νέα καρτέλα ↗</a>
-      </div>
       <iframe src={app.url} title={app.title} allow="camera; clipboard-write; fullscreen" />
+      <Link to="/" className="hub-pill">← My Business</Link>
     </div>
   )
 }
