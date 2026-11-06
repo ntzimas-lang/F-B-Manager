@@ -21,9 +21,6 @@ import SetPassword from './pages/SetPassword'
 import Admin from './pages/Admin'
 import Reports from './pages/Reports'
 import MyBusiness, { EmbeddedApp, AppShell } from './pages/MyBusiness'
-import Deliveries from './pages/Deliveries'
-import DeliveryPublic from './pages/DeliveryPublic'
-import MenuFC from './pages/MenuFC'
 
 function Feature({ name, children }) {
   const { hasFeature } = useAuth()
@@ -70,8 +67,6 @@ function Gate() {
         <Routes>
           <Route path="/" element={<MyBusiness />} />
           <Route path="/app/:id" element={<EmbeddedApp />} />
-          <Route path="/menu-fc" element={<MenuFC />} />
-          <Route path="/deltia" element={<AppShell title="Δελτία Εκδηλώσεων"><Deliveries /></AppShell>} />
           <Route element={<Layout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/stores" element={<Feature name="stores"><Stores /></Feature>} />
@@ -97,9 +92,6 @@ function Gate() {
 }
 
 export default function App() {
-  const m = window.location.pathname.match(/^\/d\/([0-9a-f-]{36})$/i)
-  if (m) return <DeliveryPublic token={m[1]} />
-  if (window.location.pathname === '/menu-fc') return <BrowserRouter><MenuFC /></BrowserRouter>
   return (
     <LanguageProvider>
       <AuthProvider>
