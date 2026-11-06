@@ -76,6 +76,11 @@ export default function Layout() {
             <Settings size={18} /> {t('staff')}
           </NavLink>
         )}
+        {hasFeature('deliveries') && (
+          <NavLink to="/deliveries" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
+            <Receipt size={18} /> {lang === 'el' ? 'Δελτία Εκδηλώσεων' : 'Event Notes'}
+          </NavLink>
+        )}
         {hasFeature('activity') && (
           <NavLink to="/activity" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
             <History size={18} /> {t('activity')}

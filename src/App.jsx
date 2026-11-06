@@ -20,7 +20,9 @@ import Companies from './pages/Companies'
 import SetPassword from './pages/SetPassword'
 import Admin from './pages/Admin'
 import Reports from './pages/Reports'
-import MyBusiness from './pages/MyBusiness'
+import MyBusiness, { EmbeddedApp } from './pages/MyBusiness'
+import Deliveries from './pages/Deliveries'
+import DeliveryPublic from './pages/DeliveryPublic'
 
 function Feature({ name, children }) {
   const { hasFeature } = useAuth()
@@ -66,6 +68,7 @@ function Gate() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<MyBusiness />} />
+          <Route path="/app/:id" element={<EmbeddedApp />} />
           <Route element={<Layout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/stores" element={<Feature name="stores"><Stores /></Feature>} />
@@ -77,6 +80,7 @@ function Gate() {
             <Route path="/stocktake" element={<Feature name="stocktake"><Stocktake /></Feature>} />
             <Route path="/receiving" element={<Feature name="receiving"><Receiving /></Feature>} />
             <Route path="/orders" element={<Feature name="orders"><Orders /></Feature>} />
+            <Route path="/deliveries" element={<Feature name="deliveries"><Deliveries /></Feature>} />
             <Route path="/staff" element={<Feature name="staff"><Staff /></Feature>} />
             <Route path="/activity" element={<Feature name="activity"><ActivityLog /></Feature>} />
             <Route path="/reports" element={<Feature name="reports"><Reports /></Feature>} />
@@ -91,6 +95,8 @@ function Gate() {
 }
 
 export default function App() {
+  const m = window.location.pathname.match(/^\/d\/([0-9a-f-]{36})$/i)
+  if (m) return <DeliveryPublic token={m[1]} />
   return (
     <LanguageProvider>
       <AuthProvider>

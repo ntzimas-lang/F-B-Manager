@@ -46,7 +46,7 @@ export default function Login() {
 
       <form onSubmit={handleSubmit} className="card" style={{ width: 360, maxWidth: '92vw' }}>
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--olive-900)' }}>F&B <span style={{ color: 'var(--olive-600)' }}>Manager</span></div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--olive-900)' }}>My <span style={{ color: 'var(--olive-600)' }}>Business</span></div>
           <div style={{ fontSize: 13, color: '#6b6b5f', marginTop: 4 }}>{t('login')}</div>
         </div>
 
