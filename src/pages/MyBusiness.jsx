@@ -1,11 +1,14 @@
-import { Link, useParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, Navigate, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { UtensilsCrossed, ClipboardList, Receipt, ChartColumn, CalendarDays, Calculator, LayoutGrid } from 'lucide-react'
 const ICONS = { UtensilsCrossed, ClipboardList, Receipt, ChartColumn, CalendarDays, Calculator }
 import { BUSINESS_APPS } from '../lib/businessApps'
 
 export default function MyBusiness() {
-  const { session, signOut } = useAuth()
+  const { session, signOut, role, isPlatformAdmin, profile } = useAuth()
+  if (!profile) return <div style={{ padding: 40, fontFamily: 'system-ui' }}>Φόρτωση...</div>
+  if (!(isPlatformAdmin || role === 'super_user')) return <Navigate to="/dashboard" replace />
   return (
     <div className="hub">
       <div className="hub-inner">
@@ -28,6 +31,9 @@ export default function MyBusiness() {
 
 export function EmbeddedApp() {
   const { id } = useParams()
+  const { role, isPlatformAdmin, profile } = useAuth()
+  if (!profile) return <div style={{ padding: 40, fontFamily: 'system-ui' }}>Φόρτωση...</div>
+  if (!(isPlatformAdmin || role === 'super_user')) return <Navigate to="/dashboard" replace />
   const app = BUSINESS_APPS.find((a) => a.id === id)
   if (!app?.url) return <div className="hub"><Link to="/">← My Business</Link></div>
   return (
@@ -47,6 +53,23 @@ export function AppShell({ title, children }) {
         {children}
       </div>
       <Link to="/" className="hub-pill">← My Business</Link>
+    </div>
+  )
+}
+
+// Το Events (αυτόνομη εφαρμογή με δική της σύνδεση) φορτώνεται μόνο μετά τη σύνδεση στο My Business, χωρίς δημόσιο αρχείο
+export function EventsApp() {
+  const { role, isPlatformAdmin, profile } = useAuth()
+  const [html, setHtml] = useState(null)
+  const allowed = true
+  const canHub = isPlatformAdmin || role === 'super_user'
+  useEffect(() => { if (allowed) import('../apps/events.html?raw').then((m) => setHtml(m.default)) }, [allowed])
+  if (!profile) return <div style={{ padding: 40, fontFamily: 'system-ui' }}>Φόρτωση...</div>
+  if (!allowed) return <Navigate to="/dashboard" replace />
+  return (
+    <div className="embed">
+      {html ? <iframe srcDoc={html} title="Events" allow="camera; clipboard-write; fullscreen" /> : <div className="hub"><p>Φόρτωση…</p></div>}
+      {canHub && <Link to="/" className="hub-pill">← My Business</Link>}
     </div>
   )
 }

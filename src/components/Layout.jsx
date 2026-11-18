@@ -8,6 +8,7 @@ import { useLanguage } from '../context/LanguageContext'
 export default function Layout() {
   const { stores, selectedStoreId, selectStore, loading } = useStores()
   const { profile, session, signOut, hasFeature, isPlatformAdmin, readOnly, role, isStoreScoped } = useAuth()
+  const canHub = isPlatformAdmin || role === 'super_user'
   const { lang, chooseLang, t } = useLanguage()
   const [menuOpen, setMenuOpen] = useState(false)
   const { pathname } = useLocation()
@@ -17,7 +18,7 @@ export default function Layout() {
     <div className="app-shell" data-role={role} data-readonly={readOnly ? '1' : '0'}>
       <div className={'sidebar-backdrop' + (menuOpen ? ' open' : '')} onClick={() => setMenuOpen(false)} />
       <aside className={'sidebar' + (menuOpen ? ' open' : '')} onClick={(e) => { if (e.target.closest('a')) setMenuOpen(false) }}>
-        <NavLink to="/" end className="sidebar-logo" style={{display:'block', textDecoration:'none', color:'inherit'}} title="My Business">F&B <span>Manager</span></NavLink>
+        <div className="sidebar-logo" style={{display:'block'}}>F&B <span>Manager</span></div>
         {hasFeature('dashboard') && (
           <NavLink to="/dashboard" end className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
             <LayoutDashboard size={18} /> {t('dashboard')}
@@ -142,7 +143,7 @@ export default function Layout() {
           </div>
         </div>
         <Outlet />
-      <NavLink to="/" end className="hub-pill">← My Business</NavLink>
+      {canHub && <NavLink to="/" end className="hub-pill">← My Business</NavLink>}
       </main>
     </div>
   )

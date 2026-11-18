@@ -1,0 +1,33 @@
+.pnl{--navy:#1F4E78;--blue:#2E75B6;--lightblue:#D9E1F2;--totalblue:#BDD7EE;--gray:#666;font-family:Arial,Helvetica,sans-serif;background:#f4f6f9;min-height:100vh;padding:24px 24px 90px;color:#222}
+.pnl *{box-sizing:border-box}
+.pnl .wrap{max-width:960px;margin:0 auto}
+.pnl h1{background:var(--navy);color:#fff;margin:0;padding:16px 20px;border-radius:8px 8px 0 0;font-size:19px}
+.pnl .subtitle{background:#fff;padding:8px 20px;font-size:12px;color:var(--gray);border-left:1px solid #ddd;border-right:1px solid #ddd}
+.pnl .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}
+@media (max-width:780px){.pnl .grid{grid-template-columns:1fr}}
+.pnl .card,.pnl .results,.pnl .kpi-box,.pnl .glossary{background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.1);overflow:hidden}
+.pnl .section-title{background:var(--blue);color:#fff;font-weight:bold;font-size:13px;padding:9px 14px}
+.pnl .row{padding:8px 14px;border-bottom:1px solid #eee}
+.pnl .row-flex{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pnl .row label{font-size:13px;font-weight:bold}
+.pnl .hint{font-size:11px;color:var(--gray);margin-top:2px;line-height:1.4}
+.pnl .row input{width:100px;text-align:right;padding:5px 6px;border:1px solid #bcd;border-radius:4px;font-size:13px;color:#0000CC}
+.pnl .row input:focus{outline:2px solid var(--blue)}
+.pnl .unit{font-size:12px;color:var(--gray);display:inline-block;width:22px;text-align:left;padding-left:4px}
+.pnl .results,.pnl .kpi-box,.pnl .glossary{margin-top:20px}
+.pnl .res-row{display:flex;justify-content:space-between;padding:9px 16px;font-size:14px;border-bottom:1px solid #eee}
+.pnl .res-row.sub{background:var(--lightblue);font-weight:bold}
+.pnl .res-row.total{background:var(--totalblue);font-weight:bold;font-size:15px}
+.pnl .res-row.net{color:#fff;font-weight:bold;font-size:16px}
+.pnl .pct{color:var(--gray);font-weight:normal;margin-left:8px;font-size:12px}
+.pnl .res-row.net .pct{color:#fff}
+.pnl .kpi-box{padding:14px 16px}
+.pnl .kpi-title{font-weight:bold;font-size:13px;color:var(--navy);margin-bottom:8px}
+.pnl .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:600px){.pnl .kpis{grid-template-columns:1fr}}
+.pnl .kpi{background:#f7f9fc;border-radius:6px;padding:10px;text-align:center}
+.pnl .kpi .val{font-size:17px;font-weight:bold}
+.pnl .kpi .lab{font-size:11px;color:var(--gray);margin-top:3px}
+.pnl .glossary{padding:14px 18px;font-size:12px;color:#444;line-height:1.7}
+.pnl .glossary b{color:var(--navy)}
+.pnl footer{text-align:center;font-size:11px;color:#999;margin-top:18px}

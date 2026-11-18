@@ -20,7 +20,8 @@ import Companies from './pages/Companies'
 import SetPassword from './pages/SetPassword'
 import Admin from './pages/Admin'
 import Reports from './pages/Reports'
-import MyBusiness, { EmbeddedApp, AppShell } from './pages/MyBusiness'
+import MyBusiness, { EmbeddedApp, EventsApp } from './pages/MyBusiness'
+import Pnl from './pages/Pnl'
 
 function Feature({ name, children }) {
   const { hasFeature } = useAuth()
@@ -67,6 +68,8 @@ function Gate() {
         <Routes>
           <Route path="/" element={<MyBusiness />} />
           <Route path="/app/:id" element={<EmbeddedApp />} />
+          <Route path="/events" element={<EventsApp />} />
+          <Route path="/pnl" element={<Pnl />} />
           <Route element={<Layout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/stores" element={<Feature name="stores"><Stores /></Feature>} />
