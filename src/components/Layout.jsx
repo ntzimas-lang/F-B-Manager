@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { supabase } from '../lib/supabase'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { LayoutDashboard, ChefHat, Calculator, Boxes, Truck, ClipboardCheck, Users, Wheat, History, LogOut, Menu, Receipt, PackageCheck, Settings, BarChart3, FileText } from 'lucide-react'
 import { useStores } from '../context/StoreContext'
@@ -7,6 +8,15 @@ import { useLanguage } from '../context/LanguageContext'
 
 export default function Layout() {
   const { stores, selectedStoreId, selectStore, loading } = useStores()
+  const [companies, setCompanies] = useState([])
+  useEffect(() => {
+    if (!isPlatformAdmin) return
+    supabase.from('companies').select('id, name').order('name').then(({ data }) => setCompanies(data || []))
+  }, [isPlatformAdmin])
+  async function switchCompany(e) {
+    const { error } = await supabase.rpc('switch_company', { target: e.target.value })
+    if (!error) { try { localStorage.removeItem('fb_selected_store') } catch {} window.location.reload() }
+  }
   const { profile, session, signOut, hasFeature, isPlatformAdmin, readOnly, role, isStoreScoped } = useAuth()
   const canHub = isPlatformAdmin || role === 'super_user'
   const { lang, chooseLang, t } = useLanguage()
@@ -133,6 +143,11 @@ export default function Layout() {
         <div className="topbar">
           <button className="menu-btn" onClick={() => setMenuOpen(true)}><Menu size={20} /></button>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            {isPlatformAdmin && companies.length > 1 && (
+              <select className="store-select" value={profile?.company_id || ''} onChange={switchCompany}>
+                {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            )}
             {!loading && !isStoreScoped && !inSettings && (
               <select
                 className="store-select"
