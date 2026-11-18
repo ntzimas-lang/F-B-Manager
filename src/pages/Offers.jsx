@@ -16,6 +16,7 @@ export default function Offers() {
   const [showNew, setShowNew] = useState(false)
   const [open, setOpen] = useState(null)
   const [msg, setMsg] = useState('')
+  const [busyId, setBusyId] = useState(null)
 
   async function load() {
     const [{ data: o }, { data: s }] = await Promise.all([
@@ -30,6 +31,15 @@ export default function Offers() {
     const { data, error } = await supabase.storage.from('offers').createSignedUrl(o.file_path, 300)
     if (error) return setMsg('Δεν άνοιξε το αρχείο.')
     window.open(data.signedUrl, '_blank', 'noopener')
+  }
+  async function reread(o) {
+    setMsg(''); setBusyId(o.id)
+    const dl = await supabase.storage.from('offers').download(o.file_path)
+    if (dl.error) { setBusyId(null); return setMsg('Δεν άνοιξε το αρχείο.') }
+    await supabase.from('supplier_offer_items').delete().eq('offer_id', o.id)
+    const total = await readOffer(o, dl.data, profile?.company_id, () => {})
+    setBusyId(null); await load()
+    if (total) setOpen(o); else setMsg('Δεν διαβάστηκαν τιμές από αυτό το PDF.')
   }
   async function remove(o) {
     if (!confirm(`Διαγραφή της προσφοράς «${o.title}»;`)) return
@@ -56,7 +66,7 @@ export default function Offers() {
               return (
                 <tr key={o.id}>
                   <td>{o.offer_date}</td><td>{o.suppliers?.name || '—'}</td><td>{o.title}</td><td>{o.valid_until || '—'}</td>
-                  <td>{n ? <button className="btn btn-outline" onClick={() => setOpen(o)}>{n} τιμές</button> : (o.read_status === 'scan' ? 'σκαναρισμένο PDF' : o.read_status === 'failed' ? 'δεν διαβάστηκε' : '—')}</td>
+                  <td>{n ? <button className="btn btn-outline" onClick={() => setOpen(o)}>{n} τιμές</button> : (busyId === o.id ? 'Ανάγνωση…' : (o.read_status === 'scan' ? 'σκαναρισμένο PDF' : <button className="btn btn-outline" onClick={() => reread(o)}>Ανάγνωση τιμών</button>))}</td>
                   <td style={{ display: 'flex', gap: 8 }}>
                     <button className="icon-btn" title="Άνοιγμα PDF" onClick={() => openPdf(o)}><FileText size={16} /></button>
                     <button className="icon-btn danger" title="Διαγραφή" onClick={() => remove(o)}><Trash2 size={16} /></button>
@@ -72,6 +82,31 @@ export default function Offers() {
       {open && <OfferItems offer={open} onClose={() => { setOpen(null); load() }} />}
     </div>
   )
+}
+
+async function readOffer(offer, file, companyId, setBusy) {
+  let status = 'read', total = 0
+  try {
+    const pages = await pdfPagesText(file)
+    if (!pages.join('').trim()) status = 'scan'
+    else {
+      let pos = 0
+      for (let i = 0; i < pages.length; i++) {
+        setBusy(`Ανάγνωση τιμών… σελίδα ${i + 1} από ${pages.length}`)
+        if (!pages[i].trim()) continue
+        const { data, error: fe } = await supabase.functions.invoke('read-offer', { body: { text: pages[i] } })
+        if (fe || data?.error) { status = total ? 'read' : 'failed'; continue }
+        const rows = (data.items || []).filter(x => x?.name && Number(x.price) > 0).map(x => ({
+          offer_id: offer.id, company_id: companyId, pos: pos++, category: x.category || null, code: x.code || null,
+          name: String(x.name).trim(), unit: x.unit || null, price: Number(x.price),
+        }))
+        if (rows.length) { const ins = await supabase.from('supplier_offer_items').insert(rows); if (!ins.error) total += rows.length }
+      }
+      if (!total) status = 'failed'
+    }
+  } catch { status = 'failed' }
+  await supabase.from('supplier_offers').update({ read_status: status }).eq('id', offer.id)
+  return total
 }
 
 function NewOffer({ suppliers, companyId, onClose, onDone }) {
@@ -93,28 +128,7 @@ function NewOffer({ suppliers, companyId, onClose, onDone }) {
     }).select().single()
     if (error) { await supabase.storage.from('offers').remove([path]); setBusy(''); return setErr('Δεν αποθηκεύτηκε η προσφορά.') }
     await logActivity('create', 'offer', offer.title)
-    // Ανάγνωση τιμών σελίδα-σελίδα
-    let status = 'read', total = 0
-    try {
-      const pages = await pdfPagesText(file)
-      if (!pages.join('').trim()) status = 'scan'
-      else {
-        let pos = 0
-        for (let i = 0; i < pages.length; i++) {
-          setBusy(`Ανάγνωση τιμών… σελίδα ${i + 1} από ${pages.length}`)
-          if (!pages[i].trim()) continue
-          const { data, error: fe } = await supabase.functions.invoke('read-offer', { body: { text: pages[i] } })
-          if (fe || data?.error) { status = total ? 'read' : 'failed'; continue }
-          const rows = (data.items || []).filter(x => x?.name && Number(x.price) > 0).map(x => ({
-            offer_id: offer.id, company_id: companyId, pos: pos++, category: x.category || null, code: x.code || null,
-            name: String(x.name).trim(), unit: x.unit || null, price: Number(x.price),
-          }))
-          if (rows.length) { const ins = await supabase.from('supplier_offer_items').insert(rows); if (!ins.error) total += rows.length }
-        }
-        if (!total) status = 'failed'
-      }
-    } catch { status = 'failed' }
-    await supabase.from('supplier_offers').update({ read_status: status }).eq('id', offer.id)
+    const total = await readOffer(offer, file, companyId, setBusy)
     setBusy('')
     onDone(total ? offer : null)
   }
