@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { LayoutDashboard, ChefHat, Calculator, Boxes, Truck, ClipboardCheck, Users, Wheat, History, LogOut, Menu, Receipt, PackageCheck, Settings, BarChart3 } from 'lucide-react'
+import { LayoutDashboard, ChefHat, Calculator, Boxes, Truck, ClipboardCheck, Users, Wheat, History, LogOut, Menu, Receipt, PackageCheck, Settings, BarChart3, FileText } from 'lucide-react'
 import { useStores } from '../context/StoreContext'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
@@ -38,6 +38,11 @@ export default function Layout() {
         {hasFeature('receiving') && (
           <NavLink to="/receiving" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
             <PackageCheck size={18} /> {t('receiving')}
+          </NavLink>
+        )}
+        {hasFeature('offers') && (
+          <NavLink to="/offers" className={({isActive}) => 'nav-link' + (isActive ? ' active' : '')}>
+            <FileText size={18} /> {lang === 'el' ? 'Προσφορές' : 'Offers'}
           </NavLink>
         )}
         {hasFeature('sales') && (

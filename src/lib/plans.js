@@ -1,10 +1,10 @@
 export const PLAN_FEATURES = {
   basic: ['dashboard', 'stores', 'ingredients', 'inventory', 'receiving', 'stocktake', 'users'],
-  pro: ['dashboard', 'stores', 'ingredients', 'inventory', 'receiving', 'stocktake', 'users', 'orders', 'recipes', 'costing', 'sales', 'reports'],
-  premium: ['dashboard', 'stores', 'ingredients', 'inventory', 'receiving', 'stocktake', 'users', 'orders', 'recipes', 'costing', 'sales', 'reports', 'staff', 'activity'],
+  pro: ['dashboard', 'stores', 'ingredients', 'inventory', 'receiving', 'stocktake', 'users', 'orders', 'recipes', 'costing', 'sales', 'reports', 'offers'],
+  premium: ['dashboard', 'stores', 'ingredients', 'inventory', 'receiving', 'stocktake', 'users', 'orders', 'recipes', 'costing', 'sales', 'reports', 'staff', 'activity', 'offers'],
 }
 export const PLANS = ['basic', 'pro', 'premium']
-export const TOGGLEABLE = ['ingredients', 'inventory', 'receiving', 'stocktake', 'orders', 'recipes', 'costing', 'sales', 'reports', 'staff', 'activity']
+export const TOGGLEABLE = ['ingredients', 'inventory', 'receiving', 'stocktake', 'orders', 'recipes', 'costing', 'sales', 'reports', 'staff', 'activity', 'offers']
 
 // Ενότητες που επιτρέπονται ανά ρόλο (εκτός από το πακέτο του πελάτη)
 export const ROLE_MODULES = {
