@@ -226,6 +226,7 @@ export default function Dashboard() {
     ['overview', t('overview'), true],
     ['stock', t('stockTab'), hasFeature('inventory')],
     ['cost', t('costPricesTab'), hasFeature('costing') || canPrices],
+    ['offers', 'Προσφορές', canOffers],
     ['orders', t('ordersReceiptsTab'), hasFeature('orders') || hasFeature('receiving')],
   ].filter(x => x[2])
 
@@ -317,6 +318,28 @@ export default function Dashboard() {
       </>)}
 
       {tab === 'cost' && (<>
+        {hasFeature('costing') && (
+          <div className="card" style={{ marginBottom: 16 }}>
+            <h2 style={{ marginTop: 0 }}>{t('topFoodCost')}</h2>
+            {loading ? <p>{t('loading')}</p> : topCost.length === 0 ? <p>—</p> : (
+              <table>
+                <thead><tr><th>{t('dishes')}</th><th>{t('foodCostPct')}</th></tr></thead>
+                <tbody>
+                  {topCost.map((r) => (
+                    <tr key={r.id}>
+                      <td>{r.name}</td>
+                      <td style={{ color: r.costPct > 35 ? 'var(--danger)' : r.costPct > 28 ? 'var(--warn)' : 'var(--ok)', fontWeight: 600 }}>{r.costPct.toFixed(1)}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
+        {canPrices && <PriceTrends />}
+      </>)}
+
+      {tab === 'offers' && canOffers && (<>
         {canOffers && (
           <div className="card" style={{ marginBottom: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -339,25 +362,6 @@ export default function Dashboard() {
             )}
           </div>
         )}
-        {hasFeature('costing') && (
-          <div className="card" style={{ marginBottom: 16 }}>
-            <h2 style={{ marginTop: 0 }}>{t('topFoodCost')}</h2>
-            {loading ? <p>{t('loading')}</p> : topCost.length === 0 ? <p>—</p> : (
-              <table>
-                <thead><tr><th>{t('dishes')}</th><th>{t('foodCostPct')}</th></tr></thead>
-                <tbody>
-                  {topCost.map((r) => (
-                    <tr key={r.id}>
-                      <td>{r.name}</td>
-                      <td style={{ color: r.costPct > 35 ? 'var(--danger)' : r.costPct > 28 ? 'var(--warn)' : 'var(--ok)', fontWeight: 600 }}>{r.costPct.toFixed(1)}%</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        )}
-        {canPrices && <PriceTrends />}
       </>)}
 
       {tab === 'orders' && (<>
