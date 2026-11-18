@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useStores } from '../context/StoreContext'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
+import { Link } from 'react-router-dom'
 import { Download } from 'lucide-react'
 import PriceTrends from './PriceTrends'
 import jsPDF from 'jspdf'
@@ -31,6 +32,28 @@ export default function Dashboard() {
   const [monthPurchases, setMonthPurchases] = useState(0)
   const [recentReceipts, setRecentReceipts] = useState([])
   const [tab, setTab] = useState('overview')
+  const [offerRows, setOfferRows] = useState([])
+  const [offerCount, setOfferCount] = useState(0)
+  const canOffers = hasFeature('offers') && !hideCosts
+  useEffect(() => {
+    if (!canOffers) return
+    ;(async () => {
+      const [it, oc] = await Promise.all([
+        supabase.from('supplier_offer_items').select('name, unit, price, ingredient_id, ingredients(name, unit, current_price), supplier_offers(offer_date, suppliers(name))').not('ingredient_id', 'is', null).limit(5000),
+        supabase.from('supplier_offers').select('id', { count: 'exact', head: true }),
+      ])
+      setOfferCount(oc.count || 0)
+      const best = {}
+      for (const r of it.data || []) {
+        const cur = Number(r.ingredients?.current_price)
+        if (!(cur > 0)) continue
+        const d = r.supplier_offers?.offer_date || ''
+        const b = best[r.ingredient_id]
+        if (!b || d > b.date) best[r.ingredient_id] = { ing: r.ingredients.name, unit: r.ingredients.unit, cur, price: Number(r.price), date: d, sup: r.supplier_offers?.suppliers?.name }
+      }
+      setOfferRows(Object.values(best).map(x => ({ ...x, diff: ((x.price - x.cur) / x.cur) * 100 })).sort((a, b) => a.diff - b.diff))
+    })()
+  }, [canOffers])
   const canPrices = hasFeature('receiving') && !hideCosts
   const byStore = (q, col = 'store_id') => (sid === 'all' ? q : q.eq(col, sid))
 
@@ -245,6 +268,7 @@ export default function Dashboard() {
               <div className="stat-value" style={{ color: stats.lowStock > 0 ? 'var(--danger)' : 'var(--ok)' }}>{stats.lowStock}</div>
             </div>
           )}
+          {canOffers && <div className="card"><div className="stat-label">Προσφορές προμηθευτών</div><div className="stat-value">{offerCount}</div></div>}
           {hasFeature('orders') && <div className="card"><div className="stat-label">{t('pendingOrders')}</div><div className="stat-value">{stats.pendingOrders}</div></div>}
         </div>
 
@@ -293,6 +317,28 @@ export default function Dashboard() {
       </>)}
 
       {tab === 'cost' && (<>
+        {canOffers && (
+          <div className="card" style={{ marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ marginTop: 0 }}>Τιμές προσφορών vs τρέχουσες τιμές</h2>
+              <Link to="/offers">Όλες οι προσφορές</Link>
+            </div>
+            {offerRows.length === 0 ? <p>Δεν υπάρχουν συνδεδεμένες τιμές προσφορών.</p> : (
+              <table>
+                <thead><tr><th>Υλικό</th><th>Προμηθευτής</th><th>Τρέχουσα</th><th>Προσφορά</th><th>Διαφορά</th></tr></thead>
+                <tbody>
+                  {offerRows.slice(0, 15).map((r, i) => (
+                    <tr key={i}>
+                      <td>{r.ing}</td><td>{r.sup || '—'}</td>
+                      <td>{r.cur.toFixed(3)} €/{r.unit}</td><td>{r.price.toFixed(3)} €</td>
+                      <td style={{ color: r.diff < 0 ? 'var(--ok)' : r.diff > 0 ? 'var(--danger)' : undefined }}>{(r.diff > 0 ? '+' : '') + r.diff.toFixed(1)}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
         {hasFeature('costing') && (
           <div className="card" style={{ marginBottom: 16 }}>
             <h2 style={{ marginTop: 0 }}>{t('topFoodCost')}</h2>
