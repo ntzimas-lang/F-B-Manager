@@ -8,6 +8,8 @@ import { useLanguage } from '../context/LanguageContext'
 
 export default function Layout() {
   const { stores, selectedStoreId, selectStore, loading } = useStores()
+  const { profile, session, signOut, hasFeature, isPlatformAdmin, readOnly, role, isStoreScoped } = useAuth()
+  const canHub = isPlatformAdmin || role === 'super_user'
   const [companies, setCompanies] = useState([])
   useEffect(() => {
     if (!isPlatformAdmin) return
@@ -17,8 +19,6 @@ export default function Layout() {
     const { error } = await supabase.rpc('switch_company', { target: e.target.value })
     if (!error) { try { localStorage.removeItem('fb_selected_store') } catch {} window.location.reload() }
   }
-  const { profile, session, signOut, hasFeature, isPlatformAdmin, readOnly, role, isStoreScoped } = useAuth()
-  const canHub = isPlatformAdmin || role === 'super_user'
   const { lang, chooseLang, t } = useLanguage()
   const [menuOpen, setMenuOpen] = useState(false)
   const { pathname } = useLocation()
