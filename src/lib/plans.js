@@ -1,5 +1,5 @@
 export const PLAN_FEATURES = {
-  basic: ['dashboard', 'stores', 'ingredients', 'inventory', 'receiving', 'stocktake', 'users'],
+  basic: ['dashboard', 'stores', 'ingredients', 'inventory', 'receiving', 'stocktake', 'users', 'offers'],
   pro: ['dashboard', 'stores', 'ingredients', 'inventory', 'receiving', 'stocktake', 'users', 'orders', 'recipes', 'costing', 'sales', 'reports', 'offers'],
   premium: ['dashboard', 'stores', 'ingredients', 'inventory', 'receiving', 'stocktake', 'users', 'orders', 'recipes', 'costing', 'sales', 'reports', 'staff', 'activity', 'offers'],
 }
