@@ -85,7 +85,8 @@ export default function Offers() {
 }
 
 async function readOffer(offer, file, companyId, setBusy) {
-  let status = 'read', total = 0
+  let status = 'read', total = 0, supName = '', dates = {}
+  const { data: ingList } = await supabase.from('ingredients').select('id, name')
   try {
     const pages = await pdfPagesText(file)
     if (!pages.join('').trim()) status = 'scan'
@@ -96,16 +97,28 @@ async function readOffer(offer, file, companyId, setBusy) {
         if (!pages[i].trim()) continue
         const { data, error: fe } = await supabase.functions.invoke('read-offer', { body: { text: pages[i] } })
         if (fe || data?.error) { status = total ? 'read' : 'failed'; continue }
+        if (!supName && data.supplier_name) supName = data.supplier_name
+        if (!dates.offer_date && /^\d{4}-\d{2}-\d{2}$/.test(data.offer_date || '')) dates.offer_date = data.offer_date
+        if (!dates.valid_until && /^\d{4}-\d{2}-\d{2}$/.test(data.valid_until || '')) dates.valid_until = data.valid_until
         const rows = (data.items || []).filter(x => x?.name && Number(x.price) > 0).map(x => ({
           offer_id: offer.id, company_id: companyId, pos: pos++, category: x.category || null, code: x.code || null,
           name: String(x.name).trim(), unit: x.unit || null, price: Number(x.price),
+          ingredient_id: bestMatch(String(x.name), ingList || [], 0.7)?.ingredient.id || null,
         }))
         if (rows.length) { const ins = await supabase.from('supplier_offer_items').insert(rows); if (!ins.error) total += rows.length }
       }
       if (!total) status = 'failed'
     }
   } catch { status = 'failed' }
-  await supabase.from('supplier_offers').update({ read_status: status }).eq('id', offer.id)
+  const upd = { read_status: status }
+  if (supName && !offer.supplier_id) {
+    const { data: sups } = await supabase.from('suppliers').select('id, name')
+    let m = bestMatch(supName, sups || [], 0.6)?.ingredient
+    if (!m) { const c = await supabase.from('suppliers').insert({ name: supName, company_id: companyId }).select('id, name').single(); m = c.data }
+    if (m) upd.supplier_id = m.id
+  }
+  if (!offer.valid_until && dates.valid_until) upd.valid_until = dates.valid_until
+  await supabase.from('supplier_offers').update(upd).eq('id', offer.id)
   return total
 }
 
@@ -140,7 +153,7 @@ function NewOffer({ suppliers, companyId, onClose, onDone }) {
         <div className="form-row"><label>Αρχείο PDF</label><input type="file" accept="application/pdf,.pdf" onChange={e => setFile(e.target.files[0] || null)} /></div>
         <div className="form-row"><label>Προμηθευτής</label>
           <select value={form.supplier_id} onChange={e => setForm({ ...form, supplier_id: e.target.value })}>
-            <option value="">— επέλεξε —</option>{suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            <option value="">— αυτόματα από το PDF —</option>{suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         </div>
         <div className="form-row"><label>Τίτλος (προαιρετικά)</label><input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} /></div>

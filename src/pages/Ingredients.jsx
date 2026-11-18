@@ -21,6 +21,7 @@ export default function Ingredients() {
   const [fSup, setFSup] = useState('')
   const [q, setQ] = useState('')
   const [showLabels, setShowLabels] = useState(false)
+  const [offerPrices, setOfferPrices] = useState({})
 
   async function loadAll() {
     const [i, s] = await Promise.all([
@@ -29,6 +30,14 @@ export default function Ingredients() {
     ])
     setIngredients(i.data || [])
     setSuppliers(s.data || [])
+    // Τελευταία τιμή προσφοράς ανά υλικό (μόνο owner/super_user βλέπουν προσφορές)
+    const o = await supabase.from('supplier_offer_items').select('ingredient_id, price, unit, supplier_offers(offer_date, valid_until, suppliers(name))').not('ingredient_id', 'is', null).limit(5000)
+    const map = {}
+    for (const r of o.data || []) {
+      const d = r.supplier_offers?.offer_date || ''
+      if (!map[r.ingredient_id] || d > map[r.ingredient_id].date) map[r.ingredient_id] = { price: r.price, unit: r.unit, date: d, sup: r.supplier_offers?.suppliers?.name, until: r.supplier_offers?.valid_until }
+    }
+    setOfferPrices(map)
   }
 
   useEffect(() => { loadAll() }, [])
@@ -41,6 +50,7 @@ export default function Ingredients() {
     loadAll()
   }
 
+  const hasOffers = Object.keys(offerPrices).length > 0
   const shown = ingredients.filter(i => (!fCat || (fCat === '__none' ? !i.category : i.category === fCat)) && (!fSup || i.supplier_id === fSup) && (!q || (i.name + ' ' + (i.code || '')).toLowerCase().includes(q.toLowerCase())))
 
   return (
@@ -72,7 +82,7 @@ export default function Ingredients() {
           <input placeholder={t('search')} value={q} onChange={e => setQ(e.target.value)} />
         </div>
         <table>
-          <thead><tr><th>{t('code')}</th><th>{t('name')}</th><th>{t('category')}</th><th>{t('unit')}</th>{!hideCosts && <th>{t('price')}</th>}<th>{t('supplier')}</th><th></th></tr></thead>
+          <thead><tr><th>{t('code')}</th><th>{t('name')}</th><th>{t('category')}</th><th>{t('unit')}</th>{!hideCosts && <th>{t('price')}</th>}{!hideCosts && hasOffers && <th>Τιμή προσφοράς</th>}<th>{t('supplier')}</th><th></th></tr></thead>
           <tbody>
             {shown.map(ing => (
               <tr key={ing.id}>
@@ -81,6 +91,7 @@ export default function Ingredients() {
                 <td>{ing.category || '-'}</td>
                 <td style={{textTransform:'uppercase'}}>{ing.unit}</td>
                 {!hideCosts && <td style={{whiteSpace:'nowrap'}}>{Number(ing.current_price).toFixed(3)} €</td>}
+                {!hideCosts && hasOffers && <td style={{whiteSpace:'nowrap'}} title={offerPrices[ing.id] ? `${offerPrices[ing.id].sup || ''} ${offerPrices[ing.id].date}` : ''}>{offerPrices[ing.id] ? (() => { const op = offerPrices[ing.id]; const cur = Number(ing.current_price); const d = cur > 0 ? ((Number(op.price) - cur) / cur) * 100 : null; return <>{Number(op.price).toFixed(3)} € <span style={{ fontSize: 12, color: d == null ? '#666' : d < 0 ? '#1f7a43' : d > 0 ? '#b3261e' : '#666' }}>{d == null ? '' : (d > 0 ? '+' : '') + d.toFixed(1) + '%'}</span></> })() : ''}</td>}
                 <td>{suppliers.find(s => s.id === ing.supplier_id)?.name || '-'}</td>
                 <td style={{display:'flex', gap:8}}>
                   {!hideCosts && <button className="icon-btn" title={t('priceHistory')} onClick={() => setHistoryIng(ing)}><LineChart size={16}/></button>}
