@@ -14,16 +14,14 @@ export function StoreProvider({ children }) {
 
   useEffect(() => {
     async function loadStores() {
-      const { data, error } = await supabase
-        .from('stores')
-        .select('*')
-        .eq('active', true)
-        .order('name')
+      let q = supabase.from('stores').select('*').eq('active', true).order('name')
+      if (profile?.company_id) q = q.eq('company_id', profile.company_id)
+      const { data, error } = await q
       if (!error && data) setStores(data)
       setLoading(false)
     }
     loadStores()
-  }, [])
+  }, [profile?.company_id])
 
   useEffect(() => {
     if (isStoreScoped && profile?.store_id) {
